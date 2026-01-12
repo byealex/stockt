@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.stockt.data.ShelfWithItems
 import com.example.stockt.data.Item
+import com.example.stockt.R
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -86,11 +88,27 @@ fun InventoryScreen(
         floatingActionButton = {
             if (selectedShelfId == null) {
                 Column(horizontalAlignment = Alignment.End) {
+//                    AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+//                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+//                            Text("Add Shelf", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+//                            SmallFloatingActionButton(onClick = { showShelfDialog = true; isFabExpanded = false }) {
+//                                Icon(Icons.Default.Edit, contentDescription = "Add Shelf")
+//                            }
+//                        }
+//                    }
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-                            Text("Add Shelf", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+                            Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
                             SmallFloatingActionButton(onClick = { showShelfDialog = true; isFabExpanded = false }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Add Shelf")
+                                Icon(Icons.Default.Edit, contentDescription = "Manage Inventory")
+                            }
+                        }
+                    }
+                    AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+                            Text("Scan Barcode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+                            SmallFloatingActionButton(onClick = { showShelfDialog = true; isFabExpanded = false }) {
+                                Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan Barcode")
                             }
                         }
                     }
