@@ -1,0 +1,104 @@
+/* --- 1. Variables & Reset --- */
+:root {
+    --bg-main: #10131A;
+    --bg-surface: #1E293B;
+    --accent: #4482E9;
+    --text-main: #FFFFFF;
+    --text-muted: #94A3B8; /* Slate gray for easy reading */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
+}
+
+/* --- 2. Navbar Styling --- */
+.navbar {
+    background-color: var(--bg-surface);
+    padding: 20px 40px;
+    display: flex;
+    gap: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.navbar a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.navbar a:hover {
+    color: var(--accent);
+}
+
+/* --- 3. Main Layout --- */
+.container {
+    max-width: 800px;
+    margin: 60px auto; /* Centers the content */
+    padding: 0 20px;
+}
+
+/* --- 4. Typography --- */
+h1 {
+    font-size: 3rem;
+    color: var(--accent);
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+/* The names under the title */
+.meta-info {
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 50px;
+    border-left: 3px solid var(--accent);
+    padding-left: 15px;
+}
+
+h2 {
+    color: var(--text-main);
+    font-size: 1.8rem;
+    margin-top: 40px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--bg-surface);
+    padding-bottom: 10px;
+}
+
+p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin-bottom: 20px;
+}
+
+/* --- 5. Bottom Link --- */
+.footer-link-section {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--bg-surface);
+    text-align: center;
+}
+
+.later-link {
+    display: inline-block;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    border: 1px solid var(--accent);
+    padding: 10px 20px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.later-link:hover {
+    background-color: rgba(68, 130, 233, 0.1);
+}
