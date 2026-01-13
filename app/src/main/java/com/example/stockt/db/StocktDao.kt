@@ -34,6 +34,11 @@ interface StocktDao {
     @Delete
     suspend fun deleteItem(itemEntity: ItemEntity)
 
+    @Delete
+    suspend fun deleteShelf(shelfEntity: ShelfEntity)
+
+
+
     @Update
     suspend fun updateItem(itemEntity: ItemEntity)
 }

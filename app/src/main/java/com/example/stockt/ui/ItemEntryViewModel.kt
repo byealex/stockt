@@ -1,5 +1,6 @@
 package com.example.stockt.ui
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +14,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.example.stockt.data.OpenFoodFactsApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.net.URL
+import com.example.stockt.data.ProductData
 
 class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel() {
 
@@ -20,6 +27,11 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
     private var currentItemId: Int? = null
 
     var itemName by mutableStateOf("")
+
+    var isLoading by mutableStateOf(false)
+
+    var scannedProductPreview by mutableStateOf<ProductData?>(null)
+    var scanError by mutableStateOf<String?>(null)
     var selectedExpiryDate by mutableStateOf<Long?>(null)
     var selectedShelfId by mutableStateOf<Int?>(null)
 
@@ -78,6 +90,101 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
         viewModelScope.launch {
             repository.createDefaultFridge()
             repository.createShelf(Shelf(name = "Top Shelf", storageId = 1))
+        }
+    }
+
+
+    fun onScanResult(barcode: String) {
+        viewModelScope.launch {
+            isLoading = true
+            scanError = null
+            scannedProductPreview = null // Clear old preview
+
+            try {
+                val response = OpenFoodFactsApi.service.getProduct(barcode)
+                if (response.product != null) {
+                    // SUCCESS: Show the Preview Dialog
+                    scannedProductPreview = response.product
+                } else {
+                    scanError = "Product not found."
+                }
+            } catch (e: Exception) {
+                scanError = "Check Internet Connection."
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun acceptScannedProduct(context: Context) {
+        val product = scannedProductPreview ?: return
+
+        // Reset form for clean entry
+        resetForm()
+
+        // Pre-fill Name
+        itemName = product.product_name ?: "Unknown Product"
+
+        // Download Image
+        viewModelScope.launch {
+            product.image_url?.let { url ->
+                val savedFile = downloadImageToFile(url, context)
+                if (savedFile != null) selectedImagePath = savedFile.absolutePath
+            }
+        }
+
+        // Close preview
+        scannedProductPreview = null
+    }
+
+    private fun fetchProductDetails(barcode: String, context: Context) {
+        viewModelScope.launch {
+            isLoading = true
+            scanError = null
+            try {
+                val response = OpenFoodFactsApi.service.getProduct(barcode)
+                val product = response.product
+
+                if (product != null) {
+                    itemName = product.product_name ?: ""
+                    product.image_url?.let { url ->
+                        val savedFile = downloadImageToFile(url, context)
+                        if (savedFile != null) selectedImagePath = savedFile.absolutePath
+                    }
+                } else {
+                    scanError = "Product not found."
+                }
+            } catch (e: Exception) {
+                scanError = "Check Internet Connection."
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    // Helper: Downloads the image from the URL to your app's private storage
+    private suspend fun downloadImageToFile(imageUrl: String, context: Context): File? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = URL(imageUrl)
+                val connection = url.openConnection()
+                connection.connect()
+
+                // Create a file to save it to
+                val (file, _) = createImageFile(context) // Reusing your existing helper
+
+                val input = connection.getInputStream()
+                val output = file.outputStream()
+
+                input.copyTo(output)
+
+                output.close()
+                input.close()
+
+                file
+            } catch (e: Exception) {
+                null
+            }
         }
     }
 }

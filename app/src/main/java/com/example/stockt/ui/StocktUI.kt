@@ -63,20 +63,57 @@ fun InventoryScreen(
     entryViewModel: ItemEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.createDefaultCategoriesIfNeeded()
+    }
+    // --- NAVIGATION STATES ---
     var selectedShelfId by remember { mutableStateOf<Int?>(null) }
     val selectedShelf = uiState.shelves.find { it.shelf.id == selectedShelfId }
 
+    // NEW STATE: Are we on the "Manage" page?
+    var showManageInventories by remember { mutableStateOf(false) }
+
+    // DIALOG STATES
     var isFabExpanded by remember { mutableStateOf(false) }
     var showItemDialog by remember { mutableStateOf(false) }
-    var showShelfDialog by remember { mutableStateOf(false) }
+    var showInventoryDialog by remember { mutableStateOf(false) }
+    var showScanner by remember { mutableStateOf(false) }
+
     val rotationAngle by animateFloatAsState(if (isFabExpanded) 45f else 0f, label = "fab")
 
-    BackHandler(enabled = selectedShelfId != null) { selectedShelfId = null }
+    // Back Handler Logic
+    BackHandler(enabled = selectedShelfId != null || showManageInventories) {
+        when {
+            selectedShelfId != null -> selectedShelfId = null
+            showManageInventories -> showManageInventories = false
+        }
+    }
 
+    // If we are managing locations, show THAT screen (it has its own Scaffold)
+    if (showManageInventories) {
+        ManageInventoryScreen(
+            shelves = uiState.shelves,
+            onBack = { showManageInventories = false },
+            onDeleteShelf = { shelf -> viewModel.deleteShelf(shelf) },
+            onAddShelf = { showInventoryDialog = true } // Open the existing dialog on top
+        )
+        // We still need to render the dialog if it's triggered from the Manage Screen
+        if (showInventoryDialog) {
+            ShelfEntryDialog(
+                onDismissRequest = { showInventoryDialog = false },
+                onConfirm = { viewModel.createShelf(it) }
+            )
+        }
+        return // Stop here so we don't render the main Scaffold underneath
+    }
+
+    // --- MAIN DASHBOARD SCAFFOLD ---
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(selectedShelf?.shelf?.name ?: "My Fridge") },
+                title = { Text(selectedShelf?.shelf?.name ?: "My Inventory") },
                 navigationIcon = {
                     if (selectedShelfId != null) {
                         IconButton(onClick = { selectedShelfId = null }) {
@@ -89,26 +126,23 @@ fun InventoryScreen(
         floatingActionButton = {
             if (selectedShelfId == null) {
                 Column(horizontalAlignment = Alignment.End) {
-//                    AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-//                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-//                            Text("Add Shelf", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-//                            SmallFloatingActionButton(onClick = { showShelfDialog = true; isFabExpanded = false }) {
-//                                Icon(Icons.Default.Edit, contentDescription = "Add Shelf")
-//                            }
-//                        }
-//                    }
+
+                    // SCAN BUTTON
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
                             Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-                            SmallFloatingActionButton(onClick = { showShelfDialog = true; isFabExpanded = false }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Manage Inventory")
-                            }
+                            SmallFloatingActionButton(
+                                onClick = { showManageInventories = true; isFabExpanded = false },
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                            ) { Icon(Icons.Default.Search, contentDescription = "Inventory") }
                         }
                     }
+
+                    // --- UPDATED: MANAGE LOCATIONS BUTTON ---
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
                             Text("Scan Barcode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-                            SmallFloatingActionButton(onClick = { showShelfDialog = true; isFabExpanded = false }) {
+                            SmallFloatingActionButton(onClick = { showScanner = true; isFabExpanded = false }) {
                                 Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan Barcode")
                             }
                         }
@@ -141,7 +175,10 @@ fun InventoryScreen(
                 } else {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                         items(uiState.shelves) { shelf ->
-                            ShelfDashboardCard(shelf = shelf, onClick = { selectedShelfId = shelf.shelf.id })
+                            ShelfDashboardCard(
+                                shelf = shelf,
+                                onClick = { selectedShelfId = shelf.shelf.id }
+                            )
                         }
                     }
                 }
@@ -158,8 +195,43 @@ fun InventoryScreen(
             }
         }
 
+        // --- DIALOGS ---
+        if (showScanner) {
+            Dialog(onDismissRequest = { showScanner = false }) {
+                Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                    BarcodeScanner(onBarcodeFound = { barcode ->
+                        showScanner = false
+                        entryViewModel.onScanResult(barcode)
+                    })
+                    IconButton(onClick = { showScanner = false }, modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
+                        Icon(Icons.Default.Close, "Close", tint = Color.White)
+                    }
+                }
+            }
+        }
+
+        if (entryViewModel.scannedProductPreview != null) {
+            ProductPreviewDialog(
+                product = entryViewModel.scannedProductPreview!!,
+                onDismiss = { entryViewModel.scannedProductPreview = null },
+                onAddToFridge = {
+                    entryViewModel.acceptScannedProduct(context)
+                    showItemDialog = true
+                }
+            )
+        }
+
         if (showItemDialog) ItemEntryDialog(onDismissRequest = { showItemDialog = false })
-        if (showShelfDialog) ShelfEntryDialog(onDismissRequest = { showShelfDialog = false }, onConfirm = { viewModel.createShelf(it) })
+
+        // Note: Location Dialog is handled inside ManageLocationsScreen OR here depending on context,
+        // but since we only open it from Manage Screen now, we handled it inside the 'if (showManageLocations)' block above.
+        // However, if you want to keep it accessible elsewhere, you can leave this:
+        if (showInventoryDialog && !showManageInventories) {
+            ShelfEntryDialog(
+                onDismissRequest = { showInventoryDialog = false },
+                onConfirm = { viewModel.createShelf(it) }
+            )
+        }
     }
 }
 
@@ -276,104 +348,188 @@ fun ItemEntryDialog(
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // --- NEW CAMERA LOGIC START ---
-    // We track the FILE, not just the URI
+    // Camera Logic
     var currentPhotoFile by remember { mutableStateOf<File?>(null) }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && currentPhotoFile != null) {
-            // SUCCESS: Save the ABSOLUTE PATH to the database
+            // Save absolute path to database
             viewModel.selectedImagePath = currentPhotoFile!!.absolutePath
         }
     }
-    // --- NEW CAMERA LOGIC END ---
+
+    // Auto-select shelf name if editing an existing item
+    LaunchedEffect(viewModel.selectedShelfId) {
+        if (viewModel.selectedShelfId != null) {
+            val shelf = availableShelves.find { it.shelf.id == viewModel.selectedShelfId }
+            if (shelf != null) selectedShelfName = shelf.shelf.name
+        }
+    }
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Add Item", style = MaterialTheme.typography.headlineSmall)
 
-                // IMAGE PREVIEW CLICK LISTENER
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.LightGray)
-                        .clickable {
-                            // 1. Get both File and Uri
-                            val (file, uri) = createImageFile(context)
-                            // 2. Remember the file so we can save its path later
-                            currentPhotoFile = file
-                            // 3. Launch Camera with the Uri
-                            cameraLauncher.launch(uri)
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (viewModel.selectedImagePath != null) {
-                        // Display the saved path
-                        AsyncImage(
-                            model = File(viewModel.selectedImagePath!!), // Load from File
-                            contentDescription = "Selected Image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.AccountBox, contentDescription = "Camera", modifier = Modifier.size(40.dp), tint = Color.Gray)
-                            Text("Tap to take photo", color = Color.Gray)
-                        }
+            // 1. LOADING STATE (If fetching from API)
+            if (viewModel.isLoading) {
+                Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Fetching product info...", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
+            } else {
+                // 2. NORMAL FORM
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Add Item", style = MaterialTheme.typography.headlineSmall)
 
-                // ... (The rest of your Name/Shelf/Date inputs are unchanged) ...
-                OutlinedTextField(value = viewModel.itemName, onValueChange = { viewModel.itemName = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
-
-                // Shelf Dropdown logic (unchanged)...
-                if (availableShelves.isEmpty()) {
-                    Button(onClick = { viewModel.createDefaultShelf() }, modifier = Modifier.fillMaxWidth()) { Text("Create Default Shelf") }
-                } else {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(value = selectedShelfName, onValueChange = {}, readOnly = true, label = { Text("Shelf") }, trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }, modifier = Modifier.fillMaxWidth())
-                        Box(modifier = Modifier.matchParentSize().clickable { isShelfDropdownExpanded = true })
-                        DropdownMenu(expanded = isShelfDropdownExpanded, onDismissRequest = { isShelfDropdownExpanded = false }) {
-                            availableShelves.forEach { shelf ->
-                                DropdownMenuItem(text = { Text(shelf.shelf.name) }, onClick = { viewModel.selectedShelfId = shelf.shelf.id; selectedShelfName = shelf.shelf.name; isShelfDropdownExpanded = false })
+                    // --- CAMERA / IMAGE PREVIEW ---
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.LightGray)
+                            .clickable {
+                                // Create file & Launch Camera
+                                val (file, uri) = createImageFile(context)
+                                currentPhotoFile = file
+                                cameraLauncher.launch(uri)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (viewModel.selectedImagePath != null) {
+                            // Show the selected image
+                            AsyncImage(
+                                model = File(viewModel.selectedImagePath!!),
+                                contentDescription = "Selected Image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            // Show "Tap to take photo" placeholder
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.AccountBox, contentDescription = "Camera", modifier = Modifier.size(40.dp), tint = Color.Gray)
+                                Text("Tap to take photo", color = Color.Gray)
                             }
                         }
                     }
-                }
 
-                // Date Picker logic (unchanged)...
-                OutlinedTextField(value = viewModel.selectedExpiryDate?.let { convertMillisToDate(it) } ?: "", onValueChange = {}, readOnly = true, label = { Text("Expiry Date") }, trailingIcon = { IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Default.DateRange, null) } }, modifier = Modifier.fillMaxWidth())
+                    // --- ERROR MESSAGE (If Scan Failed) ---
+                    if (viewModel.scanError != null) {
+                        Text(
+                            text = viewModel.scanError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    }
 
-                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = onDismissRequest) { Text("Cancel") }
-                    Button(onClick = { viewModel.saveItem(); onDismissRequest() }, enabled = viewModel.itemName.isNotBlank() && viewModel.selectedShelfId != null) { Text("Save") }
+                    // --- NAME INPUT ---
+                    OutlinedTextField(
+                        value = viewModel.itemName,
+                        onValueChange = { viewModel.itemName = it },
+                        label = { Text("Name") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // --- SHELF SELECTION ---
+                    if (availableShelves.isEmpty()) {
+                        Button(
+                            onClick = { viewModel.createDefaultShelf() },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                        ) {
+                            Text("Create Default Shelf")
+                        }
+                    } else {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = selectedShelfName,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Shelf") },
+                                trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            // Invisible box to catch clicks
+                            Box(modifier = Modifier.matchParentSize().clickable { isShelfDropdownExpanded = true })
+
+                            DropdownMenu(
+                                expanded = isShelfDropdownExpanded,
+                                onDismissRequest = { isShelfDropdownExpanded = false }
+                            ) {
+                                availableShelves.forEach { shelf ->
+                                    DropdownMenuItem(
+                                        text = { Text(shelf.shelf.name) },
+                                        onClick = {
+                                            viewModel.selectedShelfId = shelf.shelf.id
+                                            selectedShelfName = shelf.shelf.name
+                                            isShelfDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // --- DATE PICKER ---
+                    OutlinedTextField(
+                        value = viewModel.selectedExpiryDate?.let { convertMillisToDate(it) } ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Expiry Date") },
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(Icons.Default.DateRange, null)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // --- ACTION BUTTONS ---
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        TextButton(onClick = onDismissRequest) { Text("Cancel") }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                viewModel.saveItem()
+                                onDismissRequest()
+                            },
+                            enabled = viewModel.itemName.isNotBlank() && viewModel.selectedShelfId != null
+                        ) {
+                            Text("Save")
+                        }
+                    }
                 }
             }
         }
     }
 
-    // (Date Picker Dialog unchanged)
+    // Date Picker Pop-up
     if (showDatePicker) {
-        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = { TextButton(onClick = { viewModel.selectedExpiryDate = datePickerState.selectedDateMillis; showDatePicker = false }) { Text("OK") } }) { DatePicker(state = datePickerState) }
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.selectedExpiryDate = datePickerState.selectedDateMillis
+                    showDatePicker = false
+                }) { Text("OK") }
+            }
+        ) { DatePicker(state = datePickerState) }
     }
 }
-// HELPER: Creates a temporary file in the app's cache to store the photo
-// Replace the existing createImageFile function
+
+// --- HELPER FUNCTION FOR CAMERA ---
 fun createImageFile(context: Context): Pair<File, Uri> {
-    // 1. Create a specific folder inside the cache so we know where it is
     val directory = File(context.externalCacheDir, "camera_photos")
     if (!directory.exists()) {
         directory.mkdirs()
     }
 
-    // 2. Create the file there
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
     val image = File(directory, "IMG_${timeStamp}.jpg")
 
-    // 3. Get the URI
     val uri = FileProvider.getUriForFile(
         context,
         "${context.packageName}.provider",
@@ -417,7 +573,7 @@ fun getDaysRemaining(expiryDate: Long): Long {
 fun getExpiryColor(expiryDate: Long): Color {
     val days = getDaysRemaining(expiryDate)
     return when {
-        days < 0 -> ColorExpired
+        days <= 3 -> ColorExpired
         days <= 7 -> ColorWarning
         else -> ColorSafe
     }
@@ -444,8 +600,18 @@ fun ShelfEntryDialog(onDismissRequest: () -> Unit, onConfirm: (String) -> Unit) 
     Dialog(onDismissRequest = onDismissRequest) {
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Add New Shelf", style = MaterialTheme.typography.headlineSmall)
-                OutlinedTextField(value = shelfName, onValueChange = { shelfName = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+
+                // GENERIC HEADER
+                Text("Add New Inventory", style = MaterialTheme.typography.headlineSmall)
+
+                OutlinedTextField(
+                    value = shelfName,
+                    onValueChange = { shelfName = it },
+                    // GENERIC HINT
+                    label = { Text("Name (e.g., Garage, Office, Pantry)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                     TextButton(onClick = onDismissRequest) { Text("Cancel") }
                     Button(onClick = { onConfirm(shelfName); onDismissRequest() }, enabled = shelfName.isNotBlank()) { Text("Add") }
