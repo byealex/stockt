@@ -59,6 +59,19 @@ dependencies {
     // viewModel() function
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
 
+    val camerax_version = "1.3.0"
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+
+    // 2. ML Kit (To read barcodes)
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+
+    // 3. Retrofit & GSON (To talk to OpenFoodFacts API)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

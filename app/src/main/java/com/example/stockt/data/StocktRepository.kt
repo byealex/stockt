@@ -40,9 +40,14 @@ class StocktRepository(private val dao: StocktDao) {
         dao.deleteItem(item.toEntity())
     }
 
-    suspend fun updateItem(item: Item) {
-        dao.updateItem(item.toEntity())
+    suspend fun deleteShelf(shelf: Shelf) {
+        dao.deleteShelf(shelf.toEntity())
     }
+
+    suspend fun updateItem(item: Item) {
+        dao.deleteItem(item.toEntity())
+    }
+
 }
 
 
