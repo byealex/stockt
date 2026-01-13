@@ -11,6 +11,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -168,22 +169,24 @@ fun InventoryScreen(
 @Composable
 fun ItemTicket(item: Item) {
     val days = getDaysRemaining(item.expiryDate)
-    val baseColor = getExpiryColor(item.expiryDate)
+//    val baseColor = getExpiryColor(item.expiryDate)
+    val baseColor = Color(0xFF1E293B)
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = baseColor.copy(alpha = 0.15f)),
-        border = BorderStroke(width = 2.dp, color = baseColor),
+        colors = CardDefaults.cardColors(containerColor = baseColor),
+//        border = BorderStroke(width = 2.dp, color = baseColor),
         shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.width(160.dp).height(85.dp)
+        modifier = Modifier.height(85.dp)
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
+        Row(modifier = Modifier.fillMaxSize().padding(start = if (item.imagePath != null) 12.dp else 0.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
             if (item.imagePath != null) {
                 // BOX: Holds the Image + Fallback Icon
                 Box(
                     modifier = Modifier
-                        .width(50.dp)
-                        .fillMaxHeight()
-                        .background(Color.LightGray),
+                        .width(60.dp)
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color = Color.Red),
                     contentAlignment = Alignment.Center
                 ) {
                     // 1. Fallback Icon (Visible if image fails)
@@ -201,11 +204,13 @@ fun ItemTicket(item: Item) {
 
             Column(
                 modifier = Modifier.padding(12.dp).fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Top
             ) {
-                Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = baseColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = getShortExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = baseColor)
+                Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
             }
+
+            Box(modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)))
         }
     }
 }
@@ -412,7 +417,7 @@ fun getDaysRemaining(expiryDate: Long): Long {
 fun getExpiryColor(expiryDate: Long): Color {
     val days = getDaysRemaining(expiryDate)
     return when {
-        days <= 3 -> ColorExpired
+        days < 0 -> ColorExpired
         days <= 7 -> ColorWarning
         else -> ColorSafe
     }
