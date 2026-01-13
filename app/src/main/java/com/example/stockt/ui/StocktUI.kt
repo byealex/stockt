@@ -132,9 +132,8 @@ fun InventoryScreen(
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
                             Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
                             SmallFloatingActionButton(
-                                onClick = { showManageInventories = true; isFabExpanded = false },
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                            ) { Icon(Icons.Default.Search, contentDescription = "Inventory") }
+                                onClick = { showManageInventories = true; isFabExpanded = false }
+                            ) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
                         }
                     }
 
