@@ -219,38 +219,44 @@ fun InventoryScreen(
             if (selectedShelfId == null) {
                 Column(horizontalAlignment = Alignment.End) {
 
-                    // MANAGE INVENTORY BUTTON
-                    AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-                            Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-                            SmallFloatingActionButton(
-                                onClick = { showManageInventories = true; isFabExpanded = false }
-                            ) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
+                    Column(
+                        modifier = Modifier.background(color = Color(0xFF1F2F4A)).padding(12.dp),
+                        horizontalAlignment = Alignment.End,
+                        ) {
+                        // MANAGE INVENTORY BUTTON
+                        AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+                                Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+                                SmallFloatingActionButton(
+                                    onClick = { showManageInventories = true; isFabExpanded = false }
+                                ) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
+                            }
                         }
-                    }
 
-                    // SCAN BARCODE BUTTON
-                    AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-                            Text("Scan Barcode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-                            SmallFloatingActionButton(onClick = { showScanner = true; isFabExpanded = false }) {
-                                Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan Barcode")
+                        // SCAN BARCODE BUTTON
+                        AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+                                Text("Scan Barcode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+                                SmallFloatingActionButton(onClick = { showScanner = true; isFabExpanded = false }) {
+                                    Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan Barcode")
+                                }
+                            }
+                        }
+
+                        // ADD ITEM BUTTON
+                        AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 24.dp)) {
+                                Text("Add Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+                                SmallFloatingActionButton(onClick = {
+                                    entryViewModel.resetForm()
+                                    showItemDialog = true; isFabExpanded = false
+                                }) {
+                                    Icon(Icons.Default.ShoppingCart, contentDescription = "Add Item")
+                                }
                             }
                         }
                     }
 
-                    // ADD ITEM BUTTON
-                    AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 24.dp)) {
-                            Text("Add Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-                            SmallFloatingActionButton(onClick = {
-                                entryViewModel.resetForm()
-                                showItemDialog = true; isFabExpanded = false
-                            }) {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = "Add Item")
-                            }
-                        }
-                    }
                     FloatingActionButton(onClick = { isFabExpanded = !isFabExpanded }) {
                         Icon(Icons.Default.Add, contentDescription = "Expand", modifier = Modifier.rotate(rotationAngle))
                     }
@@ -266,7 +272,7 @@ fun InventoryScreen(
                         Text("No Shelves! Add one to start.", style = MaterialTheme.typography.headlineSmall)
                     }
                 } else {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(44.dp)) {
                         items(uiState.shelves) { shelf ->
                             ShelfDashboardCard(
                                 shelf = shelf,
@@ -344,42 +350,47 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
     Card(
         colors = CardDefaults.cardColors(containerColor = baseColor),
 //        border = BorderStroke(width = 2.dp, color = baseColor),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.height(85.dp)
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.height(100.dp)
     ) {
-        Row(modifier = Modifier.fillMaxSize().padding(start = if (item.imagePath != null) 12.dp else 0.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-            if (item.imagePath != null) {
-                // BOX: Holds the Image + Fallback Icon
-                Box(
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(60.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(color = Color.Red),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // 1. Fallback Icon (Visible if image fails)
-                    Icon(Icons.Default.Warning, contentDescription = "Error", tint = Color.Red)
+        Row(modifier = Modifier.fillMaxSize(),
+//            .padding(start = if (item.imagePath != null) 12.dp else 0.dp),
+            Arrangement.SpaceBetween, Alignment.CenterVertically) {
+            Row {
+                if (item.imagePath != null) {
+                    // BOX: Holds the Image + Fallback Icon
+                    Box(
+                        modifier = Modifier
+                            //                        .fillMaxSize()
+                            //                        .clip(RoundedCornerShape(8.dp))
+//                            .background(color = Color.Red)
+                            .padding(12.dp)
+                            .aspectRatio(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // 1. Fallback Icon (Visible if image fails)
+                        Icon(Icons.Default.Warning, contentDescription = "Error", tint = Color.Red)
 
-                    // 2. The Real Image
-                    AsyncImage(
-                        model = File(item.imagePath),
-                        contentDescription = "Item Image",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                        // 2. The Real Image
+                        AsyncImage(
+                            model = File(item.imagePath),
+                            contentDescription = "Item Image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp))
+                        )
+                    }
                 }
-            }
 
-            Column(
-                modifier = Modifier.padding(12.dp).fillMaxHeight(),
-                verticalArrangement = Arrangement.Top
-            ) {
-                Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
-                if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    SafetyBadge(status = safetyStatus)
+                Column(
+                    modifier = Modifier.padding(12.dp).fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
+                    if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        SafetyBadge(status = safetyStatus)
+                    }
                 }
             }
 
@@ -390,52 +401,61 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
 @Composable
 fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> Unit, onEdit: (Item) -> Unit) {
     val days = getDaysRemaining(item.expiryDate)
+    val baseColor = Color(0xFF1E293B)
 
     val safetyStatus = if (userPrefs != null) {
         SafetyUtils.checkSafety(item, userPrefs)
     } else SafetyStatus.UNKNOWN
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = baseColor),
+//        border = BorderStroke(width = 2.dp, color = baseColor),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.height(100.dp),
+        onClick = { onEdit(item) }
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (item.imagePath != null) {
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Gray),
-                    contentAlignment = Alignment.Center
+        Row(modifier = Modifier.fillMaxSize(),
+//            .padding(start = if (item.imagePath != null) 12.dp else 0.dp),
+            Arrangement.SpaceBetween, Alignment.CenterVertically) {
+            Row {
+                if (item.imagePath != null) {
+                    // BOX: Holds the Image + Fallback Icon
+                    Box(
+                        modifier = Modifier
+    //                        .fillMaxSize()
+    //                        .clip(RoundedCornerShape(8.dp))
+//                            .background(color = Color.Red)
+                            .padding(12.dp)
+                            .aspectRatio(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // 1. Fallback Icon (Visible if image fails)
+                        Icon(Icons.Default.Warning, contentDescription = "Error", tint = Color.Red)
+
+                        // 2. The Real Image
+                        AsyncImage(
+                            model = File(item.imagePath),
+                            contentDescription = "Item Image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp))
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.padding(12.dp).fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(Icons.Default.Warning, contentDescription = null, tint = Color.Red)
-                    AsyncImage(
-                        model = File(item.imagePath),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-            } else {
-                Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(getExpiryColor(item.expiryDate)))
-                Spacer(modifier = Modifier.width(16.dp))
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodyMedium, color = if (days <= 3) ColorExpired else MaterialTheme.colorScheme.onSurface)
-                if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    SafetyBadge(status = safetyStatus)
+                    Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
+                    if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        SafetyBadge(status = safetyStatus)
+                    }
                 }
             }
 
-            IconButton(onClick = { onEdit(item) }) { Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary) }
-            IconButton(onClick = { onDelete(item) }) { Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error) }
+            Box(modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)))
         }
     }
 }
@@ -598,17 +618,23 @@ fun ItemEntryDialog(
                     )
 
                     // --- ACTION BUTTONS ---
-                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                        TextButton(onClick = onDismissRequest) { Text("Cancel") }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                viewModel.saveItem()
-                                onDismissRequest()
-                            },
-                            enabled = viewModel.itemName.isNotBlank() && viewModel.selectedShelfId != null
-                        ) {
-                            Text("Save")
+                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                        TextButton(onClick = {
+                            //TODO: viewModel.deleteItem()
+                            onDismissRequest()
+                        }) { Text("Delete", color = Color.Red) }
+                        Row {
+                            TextButton(onClick = onDismissRequest) { Text("Cancel") }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    viewModel.saveItem()
+                                    onDismissRequest()
+                                },
+                                enabled = viewModel.itemName.isNotBlank() && viewModel.selectedShelfId != null
+                            ) {
+                                Text("Save")
+                            }
                         }
                     }
                 }
@@ -671,7 +697,7 @@ fun ShelfDashboardCard(shelf: ShelfWithItems, userPrefs: UserPreferences?, onCli
                 items(shelf.items) { item -> ItemTicket(item, userPrefs) }
             }
         }
-        Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+//        Divider(color = MaterialTheme.colorScheme.surfaceVariant)
     }
 }
 // Include your other logic helpers (getDaysRemaining, getExpiryColor, etc.) here...
@@ -683,7 +709,7 @@ fun getDaysRemaining(expiryDate: Long): Long {
 fun getExpiryColor(expiryDate: Long): Color {
     val days = getDaysRemaining(expiryDate)
     return when {
-        days <= 3 -> ColorExpired
+        days < 0 -> ColorExpired
         days <= 7 -> ColorWarning
         else -> ColorSafe
     }
@@ -785,7 +811,7 @@ fun ShelfDetailView(
             Text("This shelf is empty.", style = MaterialTheme.typography.bodyLarge)
         }
     } else {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(shelf.items) { item ->
                 // This calls the ItemDetailRow we created in the previous step
                 ItemDetailRow(
