@@ -11,6 +11,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -27,6 +28,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,15 +36,16 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.stockt.data.Item
 import com.example.stockt.data.ShelfWithItems
+import com.example.stockt.data.Item
+import com.example.stockt.R
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
-// COLORS
+// --- COLORS ---
 val ColorExpired = Color(0xFFEF5350)
 val ColorWarning = Color(0xFFFFCA28)
 val ColorSafe = Color(0xFF66BB6A)
@@ -127,41 +130,33 @@ fun InventoryScreen(
                     // SCAN BUTTON
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-                            Text("Scan Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+                            Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
                             SmallFloatingActionButton(
-                                onClick = { showScanner = true; isFabExpanded = false },
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                            ) { Icon(Icons.Default.Search, contentDescription = "Scan") }
+                                onClick = { showManageInventories = true; isFabExpanded = false }
+                            ) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
                         }
                     }
 
                     // --- UPDATED: MANAGE LOCATIONS BUTTON ---
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-                            Text("Manage Inventories", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-                            SmallFloatingActionButton(
-                                onClick = {
-                                    showManageInventories = true // Go to new screen
-                                    isFabExpanded = false
-                                }
-                            ) {
-                                // Use a Settings or List icon
-                                Icon(Icons.Default.Settings, contentDescription = "Manage Locations")
+                            Text("Scan Barcode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+                            SmallFloatingActionButton(onClick = { showScanner = true; isFabExpanded = false }) {
+                                Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan Barcode")
                             }
                         }
                     }
-
-                    // ADD ITEM BUTTON
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 24.dp)) {
                             Text("Add Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
                             SmallFloatingActionButton(onClick = {
                                 entryViewModel.resetForm()
                                 showItemDialog = true; isFabExpanded = false
-                            }) { Icon(Icons.Default.ShoppingCart, contentDescription = "Add Item") }
+                            }) {
+                                Icon(Icons.Default.ShoppingCart, contentDescription = "Add Item")
+                            }
                         }
                     }
-
                     FloatingActionButton(onClick = { isFabExpanded = !isFabExpanded }) {
                         Icon(Icons.Default.Add, contentDescription = "Expand", modifier = Modifier.rotate(rotationAngle))
                     }
@@ -170,12 +165,11 @@ fun InventoryScreen(
         }
     ) { innerPadding ->
         Column(modifier = modifier.padding(innerPadding).padding(16.dp)) {
-
             if (selectedShelf == null) {
-                // DASHBOARD VIEW
+                // DASHBOARD
                 if (uiState.shelves.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                        Text("No Shelves! Add one to start.", style = MaterialTheme.typography.headlineSmall)
                     }
                 } else {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -188,7 +182,7 @@ fun InventoryScreen(
                     }
                 }
             } else {
-                // DETAIL VIEW
+                // DETAIL
                 ShelfDetailView(
                     shelf = selectedShelf!!,
                     onDelete = { item -> viewModel.deleteItem(item) },
@@ -239,28 +233,31 @@ fun InventoryScreen(
         }
     }
 }
+
 // ==========================================
 //  UI COMPONENTS WITH IMAGE SUPPORT
 // ==========================================
 @Composable
 fun ItemTicket(item: Item) {
     val days = getDaysRemaining(item.expiryDate)
-    val baseColor = getExpiryColor(item.expiryDate)
+//    val baseColor = getExpiryColor(item.expiryDate)
+    val baseColor = Color(0xFF1E293B)
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = baseColor.copy(alpha = 0.15f)),
-        border = BorderStroke(width = 2.dp, color = baseColor),
+        colors = CardDefaults.cardColors(containerColor = baseColor),
+//        border = BorderStroke(width = 2.dp, color = baseColor),
         shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.width(160.dp).height(85.dp)
+        modifier = Modifier.height(85.dp)
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
+        Row(modifier = Modifier.fillMaxSize().padding(start = if (item.imagePath != null) 12.dp else 0.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
             if (item.imagePath != null) {
                 // BOX: Holds the Image + Fallback Icon
                 Box(
                     modifier = Modifier
-                        .width(50.dp)
-                        .fillMaxHeight()
-                        .background(Color.LightGray),
+                        .width(60.dp)
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color = Color.Red),
                     contentAlignment = Alignment.Center
                 ) {
                     // 1. Fallback Icon (Visible if image fails)
@@ -278,11 +275,13 @@ fun ItemTicket(item: Item) {
 
             Column(
                 modifier = Modifier.padding(12.dp).fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Top
             ) {
-                Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = baseColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = getShortExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = baseColor)
+                Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
             }
+
+            Box(modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)))
         }
     }
 }
@@ -334,10 +333,6 @@ fun ItemDetailRow(item: Item, onDelete: (Item) -> Unit, onEdit: (Item) -> Unit) 
 //  UPDATED ITEM DIALOG (CAMERA LOGIC)
 // ==========================================
 
-// ==========================================
-//  COMPLETE ITEM ENTRY DIALOG
-// ==========================================
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemEntryDialog(
@@ -347,18 +342,18 @@ fun ItemEntryDialog(
     val context = LocalContext.current
     val availableShelves by viewModel.availableShelves.collectAsState()
 
-    // UI States
     var isShelfDropdownExpanded by remember { mutableStateOf(false) }
     var selectedShelfName by remember { mutableStateOf("Select a Shelf") }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // Camera Logic
+    // --- NEW CAMERA LOGIC START ---
+    // We track the FILE, not just the URI
     var currentPhotoFile by remember { mutableStateOf<File?>(null) }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && currentPhotoFile != null) {
-            // Save absolute path to database
+            // SUCCESS: Save the ABSOLUTE PATH to the database
             viewModel.selectedImagePath = currentPhotoFile!!.absolutePath
         }
     }
@@ -607,7 +602,7 @@ fun ShelfEntryDialog(onDismissRequest: () -> Unit, onConfirm: (String) -> Unit) 
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
                 // GENERIC HEADER
-                Text("Add New Location", style = MaterialTheme.typography.headlineSmall)
+                Text("Add New Inventory", style = MaterialTheme.typography.headlineSmall)
 
                 OutlinedTextField(
                     value = shelfName,
