@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.stockt.data.Shelf // Ensure this import matches your Shelf location
 import com.example.stockt.data.ShelfWithItems
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,7 +23,8 @@ import com.example.stockt.data.ShelfWithItems
 fun ManageInventoryScreen(
     shelves: List<ShelfWithItems>,
     onBack: () -> Unit,
-    onDeleteShelf: (com.example.stockt.data.Shelf) -> Unit,
+    onDeleteShelf: (Shelf) -> Unit,
+    onEditShelf: (Shelf) -> Unit,
     onAddShelf: () -> Unit
 ) {
     Scaffold(
@@ -36,15 +39,14 @@ fun ManageInventoryScreen(
             )
         },
         floatingActionButton = {
-            // Button to Add a NEW Location from this screen
             FloatingActionButton(onClick = onAddShelf) {
-                Icon(Icons.Default.Add, contentDescription = "Add Location")
+                Icon(Icons.Default.Add, contentDescription = "Add Inventory")
             }
         }
     ) { innerPadding ->
         if (shelves.isEmpty()) {
             Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No locations found.", color = Color.Gray)
+                Text("No inventories found.", color = Color.Gray)
             }
         } else {
             LazyColumn(
@@ -74,11 +76,20 @@ fun ManageInventoryScreen(
                                 )
                             }
 
-                            // Delete Button
+                            // ✏️ EDIT BUTTON
+                            IconButton(onClick = { onEditShelf(shelfWithItems.shelf) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Inventory",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            // 🗑️ DELETE BUTTON
                             IconButton(onClick = { onDeleteShelf(shelfWithItems.shelf) }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete Location",
+                                    contentDescription = "Delete Inventory",
                                     tint = MaterialTheme.colorScheme.error
                                 )
                             }

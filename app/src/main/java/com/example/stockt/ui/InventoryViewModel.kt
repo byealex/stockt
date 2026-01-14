@@ -3,7 +3,7 @@ package com.example.stockt.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stockt.data.StocktRepository
-import com.example.stockt.data.Item
+import com.example.stockt.data.Item // Ensure these imports match your folder structure
 import com.example.stockt.data.Shelf
 import com.example.stockt.data.ShelfWithItems
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,9 +20,9 @@ data class InventoryUiState(
 
 class InventoryViewModel(private val repository: StocktRepository) : ViewModel() {
 
-    // 1. UI STATE: Holds the list of all locations and their items
+    // 1. UI STATE
     val uiState: StateFlow<InventoryUiState> =
-        repository.getShelvesForStorageUnit(1) // Assuming '1' is the main house/inventory
+        repository.getShelvesForStorageUnit(1)
             .map { InventoryUiState(it) }
             .stateIn(
                 scope = viewModelScope,
@@ -30,47 +30,52 @@ class InventoryViewModel(private val repository: StocktRepository) : ViewModel()
                 initialValue = InventoryUiState()
             )
 
-    // 2. INITIALIZATION: Called from the UI to create defaults if the list is empty
+    // 2. INITIALIZATION
     fun createDefaultCategoriesIfNeeded() {
         viewModelScope.launch {
-            // 1. Ask the Database directly: "Do we have shelves?"
-            // .first() waits for the database to give the real answer
             val currentList = repository.getShelvesForStorageUnit(1).first()
 
-            // 2. Only create defaults if the DATABASE is truly empty
             if (currentList.isEmpty()) {
                 repository.createDefaultFridge()
 
-                repository.createShelf(Shelf(name = "Pantry", storageId = 1))
-                repository.createShelf(Shelf(name = "Fridge", storageId = 1))
-                repository.createShelf(Shelf(name = "Basement", storageId = 1))
+                // 👇 CHANGE THIS: Use 'insertShelf', not 'saveShelf'
+                repository.insertShelf(Shelf(name = "Pantry", storageId = 1))
+                repository.insertShelf(Shelf(name = "Fridge", storageId = 1))
+                repository.insertShelf(Shelf(name = "Basement", storageId = 1))
             }
         }
     }
 
-    // 3. CREATE LOCATION: User adds a custom spot (e.g., "Garage")
-    fun createShelf(name: String) {
+    // 3. SAVE LOCATION (Handles BOTH Add and Edit)
+    // Pass '0' as ID to create new, or the real ID to update.
+    fun saveShelf(id: Int, name: String) {
         if (name.isBlank()) return
 
         viewModelScope.launch {
             repository.createDefaultFridge() // Safety check
-            repository.createShelf(
-                Shelf(name = name, storageId = 1)
+
+            val shelfToSave = Shelf(
+                id = id,
+                name = name,
+                storageId = 1
             )
+
+            // This single function handles insert OR replace
+            repository.insertShelf(shelfToSave)
         }
     }
 
-    // 4. DELETE ITEM: Connects the UI trash button to the Database
+    // 4. DELETE ITEM
     fun deleteItem(item: Item) {
         viewModelScope.launch {
             repository.deleteItem(item)
         }
     }
 
+    // 5. DELETE SHELF
     fun deleteShelf(shelf: Shelf) {
         viewModelScope.launch {
             repository.deleteShelf(shelf)
         }
     }
 }
-

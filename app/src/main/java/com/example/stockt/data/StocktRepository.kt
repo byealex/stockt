@@ -28,11 +28,11 @@ class StocktRepository(private val dao: StocktDao) {
     }
 
     // --- WRITING ---
-    suspend fun createShelf(shelf: Shelf): Int {
+    suspend fun insertShelf(shelf: Shelf): Int {
         return dao.insertShelf(shelf.toEntity()).toInt()
     }
 
-    suspend fun createItem(item: Item) {
+    suspend fun insertItem(item: Item) {
         dao.insertItem(item.toEntity())
     }
 
@@ -42,10 +42,6 @@ class StocktRepository(private val dao: StocktDao) {
 
     suspend fun deleteShelf(shelf: Shelf) {
         dao.deleteShelf(shelf.toEntity())
-    }
-
-    suspend fun updateItem(item: Item) {
-        dao.deleteItem(item.toEntity())
     }
 
 }
@@ -70,7 +66,9 @@ private fun ItemEntity.toDomainModel() = Item(
     name = this.name,
     expiryDate = this.expiryDate,
     shelfId = this.shelfId,
-    imagePath = this.imagePath
+    imagePath = this.imagePath,
+    analysisTags = this.analysisTags,
+    allergenTags = this.allergenTags
 )
 
 private fun Item.toEntity() = ItemEntity(
@@ -78,7 +76,9 @@ private fun Item.toEntity() = ItemEntity(
     name = this.name,
     expiryDate = this.expiryDate,
     shelfId = this.shelfId,
-    imagePath = this.imagePath
+    imagePath = this.imagePath,
+    analysisTags = this.analysisTags,
+    allergenTags = this.allergenTags
 )
 
 private fun ShelfWithItemsRelation.toDomainModel() = ShelfWithItems(

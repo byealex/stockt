@@ -39,6 +39,9 @@ import coil.compose.AsyncImage
 import com.example.stockt.data.ShelfWithItems
 import com.example.stockt.data.Item
 import com.example.stockt.R
+import com.example.stockt.data.SafetyStatus
+import com.example.stockt.data.SafetyUtils
+import com.example.stockt.data.UserPreferences
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -51,8 +54,29 @@ val ColorWarning = Color(0xFFFFCA28)
 val ColorSafe = Color(0xFF66BB6A)
 
 @Composable
-fun StocktApp() {
-    InventoryScreen()
+fun StocktApp(
+    // Inject the new ViewModel here
+    settingsViewModel: UserSettingsViewModel = viewModel()
+) {
+    val userPrefs by settingsViewModel.userPreferences.collectAsState()
+
+    // 1. Loading State (Wait for DataStore to read disk)
+    if (userPrefs == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    }
+    // 2. Onboarding State (First Run)
+    else if (userPrefs!!.isFirstRun) {
+        ProfileScreen(
+            isFirstTime = true,
+            onFinished = { /* State updates automatically via Flow */ }
+        )
+    }
+    // 3. Main App State
+    else {
+        InventoryScreen()
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,16 +88,23 @@ fun InventoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val settingsViewModel: UserSettingsViewModel = viewModel()
+    val userPrefs by settingsViewModel.userPreferences.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.createDefaultCategoriesIfNeeded()
     }
+
     // --- NAVIGATION STATES ---
     var selectedShelfId by remember { mutableStateOf<Int?>(null) }
-    val selectedShelf = uiState.shelves.find { it.shelf.id == selectedShelfId }
-
-    // NEW STATE: Are we on the "Manage" page?
     var showManageInventories by remember { mutableStateOf(false) }
+    var showFilterScreen by remember { mutableStateOf(false) }
+    var showProfile by remember { mutableStateOf(false) }
+
+    // 👇 NEW STATE: Track which shelf we are editing (null = Adding New)
+    var shelfToEdit by remember { mutableStateOf<com.example.stockt.data.Shelf?>(null) }
+
+    val selectedShelf = uiState.shelves.find { it.shelf.id == selectedShelfId }
 
     // DIALOG STATES
     var isFabExpanded by remember { mutableStateOf(false) }
@@ -84,29 +115,76 @@ fun InventoryScreen(
     val rotationAngle by animateFloatAsState(if (isFabExpanded) 45f else 0f, label = "fab")
 
     // Back Handler Logic
-    BackHandler(enabled = selectedShelfId != null || showManageInventories) {
+    BackHandler(enabled = selectedShelfId != null || showManageInventories || showProfile) {
         when {
             selectedShelfId != null -> selectedShelfId = null
             showManageInventories -> showManageInventories = false
+            showFilterScreen -> showFilterScreen = false
+            showProfile -> showProfile = false
         }
     }
 
-    // If we are managing locations, show THAT screen (it has its own Scaffold)
+    if (showProfile) {
+        ProfileScreen(
+            isFirstTime = false,
+            onFinished = { showProfile = false }
+        )
+        return
+    }
+
     if (showManageInventories) {
         ManageInventoryScreen(
             shelves = uiState.shelves,
             onBack = { showManageInventories = false },
             onDeleteShelf = { shelf -> viewModel.deleteShelf(shelf) },
-            onAddShelf = { showInventoryDialog = true } // Open the existing dialog on top
+
+            // ✏️ ON EDIT: Store the shelf so we use its ID later
+            onEditShelf = { shelf ->
+                shelfToEdit = shelf
+                showInventoryDialog = true
+            },
+
+            // ➕ ON ADD: Clear the shelf (ID will be 0)
+            onAddShelf = {
+                shelfToEdit = null
+                showInventoryDialog = true
+            }
         )
-        // We still need to render the dialog if it's triggered from the Manage Screen
+
+        // THE DIALOG
         if (showInventoryDialog) {
             ShelfEntryDialog(
+                initialName = shelfToEdit?.name ?: "",
+
+                // 👇 CALCULATE IF WE ARE EDITING
+                isEditing = shelfToEdit != null,
+
                 onDismissRequest = { showInventoryDialog = false },
-                onConfirm = { viewModel.createShelf(it) }
+                onConfirm = { newName ->
+                    val idToSave = shelfToEdit?.id ?: 0
+                    viewModel.saveShelf(idToSave, newName)
+                    showInventoryDialog = false
+                }
             )
         }
-        return // Stop here so we don't render the main Scaffold underneath
+        return
+    }
+
+    if (showFilterScreen) {
+        FilterScreen(
+            shelves = uiState.shelves,
+            userPrefs = userPrefs,
+            onBack = { showFilterScreen = false },
+            onEdit = { item ->
+                entryViewModel.startEditing(item)
+                showItemDialog = true
+            },
+            onDelete = { item -> viewModel.deleteItem(item) }
+        )
+
+        if (showItemDialog) ItemEntryDialog(onDismissRequest = { showItemDialog = false })
+
+        return
     }
 
     // --- MAIN DASHBOARD SCAFFOLD ---
@@ -114,20 +192,34 @@ fun InventoryScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(selectedShelf?.shelf?.name ?: "My Inventory") },
+
                 navigationIcon = {
                     if (selectedShelfId != null) {
                         IconButton(onClick = { selectedShelfId = null }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     }
+                },
+                actions = {
+                    // Only show Filter icon on the main dashboard (not inside a specific shelf)
+                    if (selectedShelfId == null) {
+                        IconButton(onClick = { showFilterScreen = true }) {
+                            // You can use Icons.Default.List or Icons.Default.Menu or a Filter icon
+                            Icon(Icons.Default.List, contentDescription = "Overview & Filter")
+                        }
+                    }
+                    IconButton(onClick = { showProfile = true }) {
+                        Icon(Icons.Default.Person, contentDescription = "Profile")
+                    }
                 }
             )
         },
+
         floatingActionButton = {
             if (selectedShelfId == null) {
                 Column(horizontalAlignment = Alignment.End) {
 
-                    // SCAN BUTTON
+                    // MANAGE INVENTORY BUTTON
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
                             Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
@@ -137,7 +229,7 @@ fun InventoryScreen(
                         }
                     }
 
-                    // --- UPDATED: MANAGE LOCATIONS BUTTON ---
+                    // SCAN BARCODE BUTTON
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
                             Text("Scan Barcode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
@@ -146,6 +238,8 @@ fun InventoryScreen(
                             }
                         }
                     }
+
+                    // ADD ITEM BUTTON
                     AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 24.dp)) {
                             Text("Add Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
@@ -176,6 +270,7 @@ fun InventoryScreen(
                         items(uiState.shelves) { shelf ->
                             ShelfDashboardCard(
                                 shelf = shelf,
+                                userPrefs = userPrefs,
                                 onClick = { selectedShelfId = shelf.shelf.id }
                             )
                         }
@@ -185,6 +280,7 @@ fun InventoryScreen(
                 // DETAIL
                 ShelfDetailView(
                     shelf = selectedShelf!!,
+                    userPrefs = userPrefs,
                     onDelete = { item -> viewModel.deleteItem(item) },
                     onEdit = { item ->
                         entryViewModel.startEditing(item)
@@ -222,26 +318,28 @@ fun InventoryScreen(
 
         if (showItemDialog) ItemEntryDialog(onDismissRequest = { showItemDialog = false })
 
-        // Note: Location Dialog is handled inside ManageLocationsScreen OR here depending on context,
-        // but since we only open it from Manage Screen now, we handled it inside the 'if (showManageLocations)' block above.
-        // However, if you want to keep it accessible elsewhere, you can leave this:
+        // Note: This logic is mostly redundant since we use ManageInventoryScreen,
+        // but kept here for safety in case other buttons trigger it.
         if (showInventoryDialog && !showManageInventories) {
             ShelfEntryDialog(
+                initialName = "", // Default to empty if not managing
                 onDismissRequest = { showInventoryDialog = false },
-                onConfirm = { viewModel.createShelf(it) }
+                onConfirm = { viewModel.saveShelf(0, it) } // 0 means Create New
             )
         }
     }
 }
-
 // ==========================================
 //  UI COMPONENTS WITH IMAGE SUPPORT
 // ==========================================
 @Composable
-fun ItemTicket(item: Item) {
+fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
     val days = getDaysRemaining(item.expiryDate)
 //    val baseColor = getExpiryColor(item.expiryDate)
     val baseColor = Color(0xFF1E293B)
+    val safetyStatus = if (userPrefs != null) {
+        SafetyUtils.checkSafety(item, userPrefs)
+    } else SafetyStatus.UNKNOWN
 
     Card(
         colors = CardDefaults.cardColors(containerColor = baseColor),
@@ -279,6 +377,10 @@ fun ItemTicket(item: Item) {
             ) {
                 Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
+                if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    SafetyBadge(status = safetyStatus)
+                }
             }
 
             Box(modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)))
@@ -286,8 +388,12 @@ fun ItemTicket(item: Item) {
     }
 }
 @Composable
-fun ItemDetailRow(item: Item, onDelete: (Item) -> Unit, onEdit: (Item) -> Unit) {
+fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> Unit, onEdit: (Item) -> Unit) {
     val days = getDaysRemaining(item.expiryDate)
+
+    val safetyStatus = if (userPrefs != null) {
+        SafetyUtils.checkSafety(item, userPrefs)
+    } else SafetyStatus.UNKNOWN
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -322,6 +428,10 @@ fun ItemDetailRow(item: Item, onDelete: (Item) -> Unit, onEdit: (Item) -> Unit) 
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodyMedium, color = if (days <= 3) ColorExpired else MaterialTheme.colorScheme.onSurface)
+                if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    SafetyBadge(status = safetyStatus)
+                }
             }
 
             IconButton(onClick = { onEdit(item) }) { Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary) }
@@ -546,7 +656,7 @@ fun createImageFile(context: Context): Pair<File, Uri> {
 
 // Re-including ShelfDashboardCard for completeness as it calls ItemTicket
 @Composable
-fun ShelfDashboardCard(shelf: ShelfWithItems, onClick: () -> Unit) {
+fun ShelfDashboardCard(shelf: ShelfWithItems, userPrefs: UserPreferences?, onClick: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = shelf.shelf.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -558,7 +668,7 @@ fun ShelfDashboardCard(shelf: ShelfWithItems, onClick: () -> Unit) {
             Text("Empty shelf", style = MaterialTheme.typography.bodyMedium, color = Color.Gray, modifier = Modifier.padding(vertical = 8.dp))
         } else {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
-                items(shelf.items) { item -> ItemTicket(item) }
+                items(shelf.items) { item -> ItemTicket(item, userPrefs) }
             }
         }
         Divider(color = MaterialTheme.colorScheme.surfaceVariant)
@@ -595,28 +705,69 @@ fun getFullExpiryText(days: Long): String {
     }
 }
 @Composable
-fun ShelfEntryDialog(onDismissRequest: () -> Unit, onConfirm: (String) -> Unit) {
-    var shelfName by remember { mutableStateOf("") }
+fun ShelfEntryDialog(
+    initialName: String = "",
+    isEditing: Boolean = false, // 👈 New parameter
+    onDismissRequest: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var shelfName by remember { mutableStateOf(initialName) }
+
     Dialog(onDismissRequest = onDismissRequest) {
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
-                // GENERIC HEADER
-                Text("Add New Inventory", style = MaterialTheme.typography.headlineSmall)
+                // 1. DYNAMIC TITLE
+                Text(
+                    text = if (isEditing) "Edit Inventory" else "Add New Inventory",
+                    style = MaterialTheme.typography.headlineSmall
+                )
 
                 OutlinedTextField(
                     value = shelfName,
                     onValueChange = { shelfName = it },
-                    // GENERIC HINT
-                    label = { Text("Name (e.g., Garage, Office, Pantry)") },
+                    label = { Text("Name (e.g., Garage, Office)") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                     TextButton(onClick = onDismissRequest) { Text("Cancel") }
-                    Button(onClick = { onConfirm(shelfName); onDismissRequest() }, enabled = shelfName.isNotBlank()) { Text("Add") }
+
+                    // 2. DYNAMIC BUTTON TEXT
+                    Button(
+                        onClick = { onConfirm(shelfName) },
+                        enabled = shelfName.isNotBlank()
+                    ) {
+                        Text(if (isEditing) "Save" else "Add")
+                    }
                 }
             }
+        }
+    }
+}
+@Composable
+fun SafetyBadge(status: SafetyStatus) {
+    val color = if (status == SafetyStatus.SAFE) Color(0xFF4CAF50) else Color(0xFFEF5350)
+    val text = if (status == SafetyStatus.SAFE) "Safe" else "Risk"
+    val icon = if (status == SafetyStatus.SAFE) Icons.Default.CheckCircle else Icons.Default.Warning
+
+    Surface(
+        color = color.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(4.dp),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.5f))
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+        ) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(12.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                color = color,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -624,9 +775,11 @@ fun ShelfEntryDialog(onDismissRequest: () -> Unit, onConfirm: (String) -> Unit) 
 @Composable
 fun ShelfDetailView(
     shelf: ShelfWithItems,
+    userPrefs: UserPreferences?,
     onDelete: (Item) -> Unit,
     onEdit: (Item) -> Unit
 ) {
+
     if (shelf.items.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("This shelf is empty.", style = MaterialTheme.typography.bodyLarge)
@@ -637,6 +790,7 @@ fun ShelfDetailView(
                 // This calls the ItemDetailRow we created in the previous step
                 ItemDetailRow(
                     item = item,
+                    userPrefs = userPrefs,
                     onDelete = onDelete,
                     onEdit = onEdit
                 )

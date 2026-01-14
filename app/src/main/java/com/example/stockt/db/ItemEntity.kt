@@ -21,5 +21,7 @@ data class ItemEntity(
     val name: String,
     val expiryDate: Long,
     val shelfId: Int,
-    val imagePath: String? = null
+    val imagePath: String? = null,
+    val analysisTags: String? = null,
+    val allergenTags: String? = null,
 )
