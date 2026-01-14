@@ -217,15 +217,20 @@ fun InventoryScreen(
 
         floatingActionButton = {
             if (selectedShelfId == null) {
-                Column(horizontalAlignment = Alignment.End) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
 
                     Column(
-                        modifier = Modifier.background(color = Color(0xFF1F2F4A)).padding(12.dp),
+                        modifier = Modifier
+                            .background(color = if(isFabExpanded) Color(0xFF1F2F4A) else Color.Transparent, shape = RoundedCornerShape(12.dp))
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.End,
                         ) {
                         // MANAGE INVENTORY BUTTON
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
                                 SmallFloatingActionButton(
                                     onClick = { showManageInventories = true; isFabExpanded = false }
@@ -233,9 +238,14 @@ fun InventoryScreen(
                             }
                         }
 
+                        if(isFabExpanded)
+                            HorizontalDivider(
+                                Modifier.width(180.dp).padding(vertical = 16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant)
+
                         // SCAN BARCODE BUTTON
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Scan Barcode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
                                 SmallFloatingActionButton(onClick = { showScanner = true; isFabExpanded = false }) {
                                     Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan Barcode")
@@ -243,9 +253,14 @@ fun InventoryScreen(
                             }
                         }
 
+                        if(isFabExpanded)
+                            HorizontalDivider(
+                                Modifier.width(180.dp).padding(vertical = 16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant)
+
                         // ADD ITEM BUTTON
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 24.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Add Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
                                 SmallFloatingActionButton(onClick = {
                                     entryViewModel.resetForm()
@@ -385,8 +400,12 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                     modifier = Modifier.padding(12.dp).fillMaxHeight(),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
+                    Column (
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
+                    }
                     if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
                         Spacer(modifier = Modifier.height(4.dp))
                         SafetyBadge(status = safetyStatus)
@@ -446,8 +465,24 @@ fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> U
                     modifier = Modifier.padding(12.dp).fillMaxHeight(),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
+                    Column (
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = item.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = getFullExpiryText(days),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFADADAD)
+                        )
+                    }
                     if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
                         Spacer(modifier = Modifier.height(4.dp))
                         SafetyBadge(status = safetyStatus)
@@ -618,7 +653,8 @@ fun ItemEntryDialog(
                     )
 
                     // --- ACTION BUTTONS ---
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Row(horizontalArrangement = if(viewModel.currentItemId != null) Arrangement.SpaceBetween else Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        if(viewModel.currentItemId != null)
                         TextButton(onClick = {
                             //TODO: viewModel.deleteItem()
                             onDismissRequest()
