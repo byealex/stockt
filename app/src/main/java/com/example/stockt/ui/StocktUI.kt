@@ -654,11 +654,14 @@ fun ItemEntryDialog(
 
                     // --- ACTION BUTTONS ---
                     Row(horizontalArrangement = if(viewModel.currentItemId != null) Arrangement.SpaceBetween else Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                        if(viewModel.currentItemId != null)
-                        TextButton(onClick = {
-                            //TODO: viewModel.deleteItem()
-                            onDismissRequest()
-                        }) { Text("Delete", color = Color.Red) }
+                        if(viewModel.currentItemId != null) {
+                            TextButton(onClick = {
+                                viewModel.deleteItem() // <--- 1. Call the function
+                                onDismissRequest()     // <--- 2. Close the dialog
+                            }) {
+                                Text("Delete", color = Color.Red)
+                            }
+                        }
                         Row {
                             TextButton(onClick = onDismissRequest) { Text("Cancel") }
                             Spacer(modifier = Modifier.width(8.dp))

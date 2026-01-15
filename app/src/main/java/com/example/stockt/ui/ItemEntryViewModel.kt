@@ -172,6 +172,29 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
         }
     }
 
+    fun deleteItem() {
+        val id = currentItemId
+        if (id != null) {
+            viewModelScope.launch {
+                // 1. Create a dummy item with ONLY the ID we want to delete.
+                // Room only cares about the ID for @Delete operations.
+                // We fill the other fields with empty/zero values to satisfy the constructor.
+                val itemToDelete = Item(
+                    id = id,
+                    name = "",         // Doesn't matter
+                    shelfId = 0,       // Doesn't matter
+                    expiryDate = 0L    // Doesn't matter
+                )
+
+                // 2. Call the repository to delete it
+                repository.deleteItem(itemToDelete)
+
+                // 3. Clean up the form
+                resetForm()
+            }
+        }
+    }
+
     fun createDefaultShelf() {
         // Logic to create a shelf if none exist
         viewModelScope.launch {
