@@ -9,6 +9,8 @@ private val DarkColorScheme = darkColorScheme(
     background = Background,
 //    surfaceVariant = SurfaceVariant,
 
+    outline = Outline,
+
     primary = Primary,
     onPrimary = Color.White,
 

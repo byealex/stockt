@@ -9,6 +9,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -16,23 +17,29 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -42,6 +49,7 @@ import com.example.stockt.R
 import com.example.stockt.data.SafetyStatus
 import com.example.stockt.data.SafetyUtils
 import com.example.stockt.data.UserPreferences
+import com.example.stockt.ui.util.dashedBorder
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -532,7 +540,9 @@ fun ItemEntryDialog(
     }
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1E293B)
+        )) {
 
             // 1. LOADING STATE (If fetching from API)
             if (viewModel.isLoading) {
@@ -553,8 +563,14 @@ fun ItemEntryDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(150.dp)
+//                            .border(width = 2.dp, brush = , shape = RoundedCornerShape(12.dp))
+                            .dashedBorder(
+                                strokeWidth = 2.dp,
+//                                color = Color(0xFFAAB3C3),
+                                color = MaterialTheme.colorScheme.outline,
+                                cornerRadius = 12.dp
+                            )
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color.LightGray)
                             .clickable {
                                 // Create file & Launch Camera
                                 val (file, uri) = createImageFile(context)
@@ -573,9 +589,11 @@ fun ItemEntryDialog(
                             )
                         } else {
                             // Show "Tap to take photo" placeholder
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.AccountBox, contentDescription = "Camera", modifier = Modifier.size(40.dp), tint = Color.Gray)
-                                Text("Tap to take photo", color = Color.Gray)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                Icon(Icons.Outlined.AddAPhoto, contentDescription = "Camera", modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.outline)
+                                Text("Tap to take photo", color = MaterialTheme.colorScheme.outline)
                             }
                         }
                     }
@@ -595,7 +613,7 @@ fun ItemEntryDialog(
                         value = viewModel.itemName,
                         onValueChange = { viewModel.itemName = it },
                         label = { Text("Name") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     // --- SHELF SELECTION ---
@@ -725,8 +743,10 @@ fun ShelfDashboardCard(shelf: ShelfWithItems, userPrefs: UserPreferences?, onCli
     Column(modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = shelf.shelf.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text = shelf.items.size.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Color(0xFF6A798C))
             Spacer(modifier = Modifier.weight(1f))
-            Icon(Icons.Default.ArrowForward, contentDescription = "Open", tint = Color.Gray)
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Open", tint = Color.Gray)
         }
         Spacer(modifier = Modifier.height(8.dp))
         if (shelf.items.isEmpty()) {
@@ -779,7 +799,12 @@ fun ShelfEntryDialog(
     var shelfName by remember { mutableStateOf(initialName) }
 
     Dialog(onDismissRequest = onDismissRequest) {
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1E293B),
+                contentColor = Color.White
+            )
+        ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
                 // 1. DYNAMIC TITLE
