@@ -768,7 +768,7 @@ fun ShelfDashboardCard(shelf: ShelfWithItems, userPrefs: UserPreferences?, onCli
         if (shelf.items.isEmpty()) {
             Text("Empty shelf", style = MaterialTheme.typography.bodyMedium, color = Color.Gray, modifier = Modifier.padding(vertical = 8.dp))
         } else {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
                 items(shelf.items) { item -> ItemTicket(item, userPrefs) }
             }
         }

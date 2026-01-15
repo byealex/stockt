@@ -103,7 +103,7 @@ fun FilterScreen(
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(displayedItems) { item ->
                         // REUSE your existing ItemDetailRow!
