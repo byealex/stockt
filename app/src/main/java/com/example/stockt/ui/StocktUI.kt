@@ -380,7 +380,6 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
         modifier = Modifier.height(100.dp)
     ) {
         Row(modifier = Modifier.fillMaxSize(),
-//            .padding(start = if (item.imagePath != null) 12.dp else 0.dp),
             Arrangement.SpaceBetween, Alignment.CenterVertically) {
             Row {
                 if (item.imagePath != null) {
@@ -412,9 +411,17 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column (
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(text = item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            text = item.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold, color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+//                           TODO: decide whether to cap the max width
+                            modifier = Modifier.widthIn(max = 124.dp)
+                        )
                         Text(text = getFullExpiryText(days), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFFADADAD))
                     }
                     if (safetyStatus != SafetyStatus.UNKNOWN && (item.analysisTags != null || item.allergenTags != null)) {
@@ -444,10 +451,16 @@ fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> U
         modifier = Modifier.height(100.dp),
         onClick = { onEdit(item) }
     ) {
-        Row(modifier = Modifier.fillMaxSize(),
-//            .padding(start = if (item.imagePath != null) 12.dp else 0.dp),
-            Arrangement.SpaceBetween, Alignment.CenterVertically) {
-            Row {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+//            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
                 if (item.imagePath != null) {
                     // BOX: Holds the Image + Fallback Icon
                     Box(
@@ -477,7 +490,7 @@ fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> U
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column (
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
                             text = item.name,
@@ -755,7 +768,7 @@ fun ShelfDashboardCard(shelf: ShelfWithItems, userPrefs: UserPreferences?, onCli
         if (shelf.items.isEmpty()) {
             Text("Empty shelf", style = MaterialTheme.typography.bodyMedium, color = Color.Gray, modifier = Modifier.padding(vertical = 8.dp))
         } else {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
                 items(shelf.items) { item -> ItemTicket(item, userPrefs) }
             }
         }
@@ -840,24 +853,24 @@ fun ShelfEntryDialog(
 }
 @Composable
 fun SafetyBadge(status: SafetyStatus) {
-    val color = if (status == SafetyStatus.SAFE) Color(0xFF4CAF50) else Color(0xFFEF5350)
+    val color = if (status == SafetyStatus.SAFE) Color(0xFF1AB387) else Color(0xFFEF5350)
     val text = if (status == SafetyStatus.SAFE) "Safe" else "Risk"
-    val icon = if (status == SafetyStatus.SAFE) Icons.Default.CheckCircle else Icons.Default.Warning
+    val icon = if (status == SafetyStatus.SAFE) Icons.Default.Check else Icons.Default.Warning
 
     Surface(
         color = color.copy(alpha = 0.1f),
-        shape = RoundedCornerShape(4.dp),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.5f))
+        shape = RoundedCornerShape(999.dp),
+//        border = BorderStroke(1.dp, color.copy(alpha = 0.5f))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         ) {
             Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(12.dp))
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = color,
                 fontWeight = FontWeight.Bold
             )
