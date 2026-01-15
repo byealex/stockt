@@ -324,7 +324,8 @@ fun InventoryScreen(
 
         // --- DIALOGS ---
         if (showScanner) {
-            Dialog(onDismissRequest = { showScanner = false }) {
+            Dialog(onDismissRequest = { showScanner = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false)) {
                 Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                     BarcodeScanner(onBarcodeFound = { barcode ->
                         showScanner = false
@@ -340,6 +341,7 @@ fun InventoryScreen(
         if (entryViewModel.scannedProductPreview != null) {
             ProductPreviewDialog(
                 product = entryViewModel.scannedProductPreview!!,
+                userPrefs = userPrefs,
                 onDismiss = { entryViewModel.scannedProductPreview = null },
                 onAddToFridge = {
                     entryViewModel.acceptScannedProduct(context)
@@ -580,11 +582,18 @@ fun ItemEntryDialog(
                             .fillMaxWidth()
                             .height(150.dp)
 //                            .border(width = 2.dp, brush = , shape = RoundedCornerShape(12.dp))
-                            .dashedBorder(
-                                strokeWidth = 2.dp,
-//                                color = Color(0xFFAAB3C3),
-                                color = MaterialTheme.colorScheme.outline,
-                                cornerRadius = 12.dp
+                            .then(
+                                // Only add dashed border if there's no image
+                                if (viewModel.selectedImagePath == null) {
+                                    Modifier.dashedBorder(
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        cornerRadius = 12.dp
+                                    )
+                                } else {
+                                    // No border
+                                    Modifier
+                                }
                             )
                             .clip(RoundedCornerShape(12.dp))
                             .clickable {

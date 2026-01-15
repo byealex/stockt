@@ -2,7 +2,11 @@ package com.example.stockt.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,19 +17,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
+import com.example.stockt.data.Item
 import com.example.stockt.data.ProductData
+import com.example.stockt.data.SafetyStatus
+import com.example.stockt.data.SafetyUtils
+import com.example.stockt.data.UserPreferences
 
 @Composable
 fun ProductPreviewDialog(
     product: ProductData,
     onDismiss: () -> Unit,
-    onAddToFridge: () -> Unit
+    onAddToFridge: () -> Unit,
+//    item: Item,
+    userPrefs: UserPreferences?,
 ) {
+    val safetyStatus = if (userPrefs != null) {
+        SafetyUtils.checkSafety(product, userPrefs)
+    } else SafetyStatus.UNKNOWN
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
 
@@ -51,13 +65,14 @@ fun ProductPreviewDialog(
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-                Divider()
+                Spacer(modifier = Modifier.height(24.dp))
+//                Divider()
+                SafetyCheck(safetyStatus)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // 3. DIETARY TAGS
-                Text("Dietary Info:", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
-                Spacer(modifier = Modifier.height(8.dp))
+//                Text("Dietary Info:", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+//                Spacer(modifier = Modifier.height(8.dp))
 
                 // We use a FlowRow logic (or simplified Column of Rows) to show tags
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -90,7 +105,7 @@ fun ProductPreviewDialog(
                     TextButton(onClick = onDismiss) { Text("Cancel") }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(onClick = onAddToFridge) {
-                        Text("Add to Fridge")
+                        Text("Add to Inventory")
                     }
                 }
             }
@@ -133,4 +148,48 @@ fun isGlutenFree(p: ProductData): Boolean =
 fun getAllergensList(p: ProductData): List<String> {
     // Clean up strings like "en:milk" -> "Milk"
     return p.allergens_tags?.map { it.replace("en:", "").replaceFirstChar { char -> char.uppercase() } } ?: emptyList()
+}
+
+@Composable
+fun SafetyCheck(status: SafetyStatus) {
+    val (color, text, icon) = when (status) {
+        SafetyStatus.SAFE -> Triple(
+            Color(0xFF1AB387),
+            "Safe to consume",
+            Icons.Default.Check
+        )
+
+        SafetyStatus.WARNING -> Triple(
+            Color(0xFFEF5350),
+            "Dietary conflict detected", // or Dietary restriction alert or Not suitable for you
+            Icons.Default.Warning
+        )
+
+        SafetyStatus.UNKNOWN -> Triple(
+            Color(0xFF9E9E9E),
+            "Not enough data to assess safety",
+            Icons.Default.Warning
+        )
+    }
+
+    Surface(
+        color = color.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(8.dp),
+//        border = BorderStroke(1.dp, color.copy(alpha = 0.5f))
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp).fillMaxWidth(),
+        ) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+                color = color,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
 }

@@ -4,10 +4,28 @@ enum class SafetyStatus { SAFE, WARNING, UNKNOWN}
 
 object SafetyUtils {
 
+    // Existing function for Item objects
     fun checkSafety(item: Item, prefs: UserPreferences): SafetyStatus {
         val analysisList = item.analysisTags?.split(",") ?: emptyList()
         val allergenList = item.allergenTags?.split(",") ?: emptyList()
 
+        return evaluateSafety(analysisList, allergenList, prefs)
+    }
+
+    // NEW: Overloaded function for ProductData objects
+    fun checkSafety(product: ProductData, prefs: UserPreferences): SafetyStatus {
+        val analysisList = product.ingredients_analysis_tags ?: emptyList()
+        val allergenList = product.allergens_tags ?: emptyList()
+
+        return evaluateSafety(analysisList, allergenList, prefs)
+    }
+
+    // Shared evaluation logic
+    private fun evaluateSafety(
+        analysisList: List<String>,
+        allergenList: List<String>,
+        prefs: UserPreferences
+    ): SafetyStatus {
         // 1. CHECK DIET
         if (prefs.isVegetarian && !containsTag(analysisList, "en:vegetarian")) return SafetyStatus.WARNING
         if (prefs.isVegan && !containsTag(analysisList, "en:vegan")) return SafetyStatus.WARNING
