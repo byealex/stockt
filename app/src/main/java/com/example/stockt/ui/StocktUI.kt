@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -207,6 +208,11 @@ fun InventoryScreen(
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     }
+                    else {
+                        IconButton(onClick = { showProfile = true }) {
+                            Icon(Icons.Default.Person, contentDescription = "Profile")
+                        }
+                    }
                 },
                 actions = {
                     // Only show Filter icon on the main dashboard (not inside a specific shelf)
@@ -215,9 +221,6 @@ fun InventoryScreen(
                             // You can use Icons.Default.List or Icons.Default.Menu or a Filter icon
                             Icon(Icons.Default.List, contentDescription = "Overview & Filter")
                         }
-                    }
-                    IconButton(onClick = { showProfile = true }) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
                     }
                 }
             )
@@ -817,7 +820,7 @@ fun ShelfEntryDialog(
                     value = shelfName,
                     onValueChange = { shelfName = it },
                     label = { Text("Name (e.g., Garage, Office)") },
-                    modifier = Modifier.fillMaxWidth()
+//                    modifier = Modifier.fillMaxWidth().focusRequester()
                 )
 
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
