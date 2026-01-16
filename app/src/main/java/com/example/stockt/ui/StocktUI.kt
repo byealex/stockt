@@ -124,7 +124,7 @@ fun InventoryScreen(
     val rotationAngle by animateFloatAsState(if (isFabExpanded) 45f else 0f, label = "fab")
 
     // Back Handler Logic
-    BackHandler(enabled = selectedShelfId != null || showManageInventories || showProfile) {
+    BackHandler(enabled = selectedShelfId != null || showManageInventories || showProfile || showFilterScreen) {
         when {
             selectedShelfId != null -> selectedShelfId = null
             showManageInventories -> showManageInventories = false
