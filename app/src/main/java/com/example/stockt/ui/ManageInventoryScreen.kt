@@ -1,7 +1,6 @@
 package com.example.stockt.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -9,16 +8,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.stockt.data.Shelf // Ensure this import matches your Shelf location
+import com.example.stockt.data.Shelf // Ensure correct import for your model
 import com.example.stockt.data.ShelfWithItems
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,9 +24,12 @@ fun ManageInventoryScreen(
     shelves: List<ShelfWithItems>,
     onBack: () -> Unit,
     onDeleteShelf: (Shelf) -> Unit,
-    onEditShelf: (Shelf) -> Unit,
-    onAddShelf: () -> Unit
+    onSaveShelf: (Int, String) -> Unit
 ) {
+    var showEntryDialog by remember { mutableStateOf(false) }
+    var shelfToEdit by remember { mutableStateOf<Shelf?>(null) }
+    var shelfToDelete by remember { mutableStateOf<Shelf?>(null) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -42,70 +42,91 @@ fun ManageInventoryScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddShelf) {
-                Icon(Icons.Default.Add, contentDescription = "Add Inventory")
+            FloatingActionButton(onClick = {
+                shelfToEdit = null
+                showEntryDialog = true
+            }) {
+                Icon(Icons.Default.Add, contentDescription = "Add Location")
             }
         }
     ) { innerPadding ->
         if (shelves.isEmpty()) {
             Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No inventories found.", color = Color.Gray)
+                Text("No locations found.", color = Color.Gray)
             }
         } else {
             LazyColumn(
                 modifier = Modifier.padding(innerPadding).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(shelves) { shelfWithItems ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                    ) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-//                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-//                            horizontalArrangement = Arrangement.SpaceBetween
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = shelfWithItems.shelf.name,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = shelfWithItems.items.size.toString(),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF6A798C)
+                                    text = "${shelfWithItems.items.size} items inside",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
-                            // ✏️ EDIT BUTTON
-                            IconButton(onClick = { onEditShelf(shelfWithItems.shelf) }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Edit Inventory",
-                                    tint = Color(0xFF9E9E9E)
-                                )
+                            // EDIT BUTTON
+                            IconButton(onClick = {
+                                shelfToEdit = shelfWithItems.shelf
+                                showEntryDialog = true
+                            }) {
+                                Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
                             }
 
-                            // 🗑️ DELETE BUTTON
-                            IconButton(onClick = { onDeleteShelf(shelfWithItems.shelf) }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = "Delete Inventory",
-                                    tint = Color.Red
-                                )
+                            // DELETE BUTTON (Triggers local warning)
+                            IconButton(onClick = { shelfToDelete = shelfWithItems.shelf }) {
+                                Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
                 }
             }
+        }
+
+        if (showEntryDialog) {
+            ShelfEntryDialog(
+                initialName = shelfToEdit?.name ?: "",
+                isEditing = shelfToEdit != null,
+                onDismissRequest = { showEntryDialog = false },
+                onConfirm = { newName ->
+                    val id = shelfToEdit?.id ?: 0
+                    onSaveShelf(id, newName)
+                    showEntryDialog = false
+                }
+            )
+        }
+
+        if (shelfToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { shelfToDelete = null },
+                title = { Text("Delete Inventory?") },
+                text = { Text("Are you sure you want to delete '${shelfToDelete?.name}'? All items inside will be lost.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onDeleteShelf(shelfToDelete!!)
+                            shelfToDelete = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) { Text("Delete") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { shelfToDelete = null }) { Text("Cancel") }
+                }
+            )
         }
     }
 }

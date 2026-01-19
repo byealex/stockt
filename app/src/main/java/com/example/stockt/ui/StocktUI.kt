@@ -11,6 +11,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -100,30 +101,114 @@ fun InventoryScreen(
     val settingsViewModel: UserSettingsViewModel = viewModel()
     val userPrefs by settingsViewModel.userPreferences.collectAsState()
 
+    // 1. DEFINE STATES AT THE TOP
+    var itemToDelete by remember { mutableStateOf<Item?>(null) }
+    var showItemDialog by remember { mutableStateOf(false) }
+    var showScanner by remember { mutableStateOf(false) }
+
+    // 2. DEFINE DIALOGS IMMEDIATELY (So they are always active)
+
+    // ✅ ITEM DELETE DIALOG
+    if (itemToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { itemToDelete = null },
+            title = { Text("Delete Item?") },
+            text = { Text("Are you sure you want to delete '${itemToDelete?.name}'?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteItem(itemToDelete!!)
+                        itemToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { itemToDelete = null }) { Text("Cancel") }
+            }
+        )
+    }
+
+    // ✅ LOADING SPINNER
+    if (entryViewModel.isLoading) {
+        Dialog(onDismissRequest = {}) {
+            Card(shape = RoundedCornerShape(16.dp)) {
+                Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Fetching Product...", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+    }
+
+    // ✅ SCAN ERROR
+    if (entryViewModel.scanError != null) {
+        AlertDialog(
+            onDismissRequest = { entryViewModel.scanError = null },
+            title = { Text("Scan Failed") },
+            text = { Text(entryViewModel.scanError!!) },
+            confirmButton = { TextButton(onClick = { entryViewModel.scanError = null }) { Text("OK") } }
+        )
+    }
+
+    if (showItemDialog) {
+        ItemEntryDialog(
+            onDismissRequest = { showItemDialog = false },
+            onDelete = {
+                val itemId = entryViewModel.currentItemId
+                if (itemId != null) {
+                    val item = uiState.shelves.flatMap { it.items }.find { it.id == itemId }
+                    itemToDelete = item
+                }
+            }
+        )
+    }
+
+    // ✅ SCANNER
+    if (showScanner) {
+        Dialog(onDismissRequest = { showScanner = false }) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                BarcodeScanner(onBarcodeFound = { barcode ->
+                    showScanner = false
+                    entryViewModel.onScanResult(barcode)
+                })
+                IconButton(onClick = { showScanner = false }, modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
+                    Icon(Icons.Default.Close, "Close", tint = Color.White)
+                }
+            }
+        }
+    }
+
+    // ✅ PRODUCT PREVIEW
+    if (entryViewModel.scannedProductPreview != null) {
+        ProductPreviewDialog(
+            product = entryViewModel.scannedProductPreview!!,
+            onDismiss = { entryViewModel.scannedProductPreview = null },
+            userPrefs = userPrefs,
+            onAddToFridge = {
+                entryViewModel.acceptScannedProduct(context)
+                showItemDialog = true
+            }
+        )
+    }
+
+
+    // --- NORMAL APP LOGIC STARTS HERE ---
+
     LaunchedEffect(Unit) {
         viewModel.createDefaultCategoriesIfNeeded()
     }
 
-    // --- NAVIGATION STATES ---
     var selectedShelfId by remember { mutableStateOf<Int?>(null) }
     var showManageInventories by remember { mutableStateOf(false) }
     var showFilterScreen by remember { mutableStateOf(false) }
     var showProfile by remember { mutableStateOf(false) }
 
-    // 👇 NEW STATE: Track which shelf we are editing (null = Adding New)
-    var shelfToEdit by remember { mutableStateOf<com.example.stockt.data.Shelf?>(null) }
-
     val selectedShelf = uiState.shelves.find { it.shelf.id == selectedShelfId }
-
-    // DIALOG STATES
     var isFabExpanded by remember { mutableStateOf(false) }
-    var showItemDialog by remember { mutableStateOf(false) }
-    var showInventoryDialog by remember { mutableStateOf(false) }
-    var showScanner by remember { mutableStateOf(false) }
-
     val rotationAngle by animateFloatAsState(if (isFabExpanded) 45f else 0f, label = "fab")
 
-    // Back Handler Logic
     BackHandler(enabled = selectedShelfId != null || showManageInventories || showProfile || showFilterScreen) {
         when {
             selectedShelfId != null -> selectedShelfId = null
@@ -133,11 +218,10 @@ fun InventoryScreen(
         }
     }
 
+    // --- SCREEN SWITCHING ---
+
     if (showProfile) {
-        ProfileScreen(
-            isFirstTime = false,
-            onFinished = { showProfile = false }
-        )
+        ProfileScreen(isFirstTime = false, onFinished = { showProfile = false })
         return
     }
 
@@ -146,36 +230,8 @@ fun InventoryScreen(
             shelves = uiState.shelves,
             onBack = { showManageInventories = false },
             onDeleteShelf = { shelf -> viewModel.deleteShelf(shelf) },
-
-            // ✏️ ON EDIT: Store the shelf so we use its ID later
-            onEditShelf = { shelf ->
-                shelfToEdit = shelf
-                showInventoryDialog = true
-            },
-
-            // ➕ ON ADD: Clear the shelf (ID will be 0)
-            onAddShelf = {
-                shelfToEdit = null
-                showInventoryDialog = true
-            }
+            onSaveShelf = { id, name -> viewModel.saveShelf(id, name) }
         )
-
-        // THE DIALOG
-        if (showInventoryDialog) {
-            ShelfEntryDialog(
-                initialName = shelfToEdit?.name ?: "",
-
-                // 👇 CALCULATE IF WE ARE EDITING
-                isEditing = shelfToEdit != null,
-
-                onDismissRequest = { showInventoryDialog = false },
-                onConfirm = { newName ->
-                    val idToSave = shelfToEdit?.id ?: 0
-                    viewModel.saveShelf(idToSave, newName)
-                    showInventoryDialog = false
-                }
-            )
-        }
         return
     }
 
@@ -188,101 +244,149 @@ fun InventoryScreen(
                 entryViewModel.startEditing(item)
                 showItemDialog = true
             },
-            onDelete = { item -> viewModel.deleteItem(item) }
+            // ✅ LINKING FILTER DELETE TO DIALOG
+            onDelete = { item -> itemToDelete = item }
         )
-
-        if (showItemDialog) ItemEntryDialog(onDismissRequest = { showItemDialog = false })
-
         return
     }
 
-    // --- MAIN DASHBOARD SCAFFOLD ---
+    // --- MAIN SCAFFOLD ---
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(selectedShelf?.shelf?.name ?: "My Inventory") },
-
                 navigationIcon = {
                     if (selectedShelfId != null) {
                         IconButton(onClick = { selectedShelfId = null }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     }
-                    else {
-                        IconButton(onClick = { showProfile = true }) {
-                            Icon(Icons.Default.Person, contentDescription = "Profile")
-                        }
-                    }
                 },
                 actions = {
-                    // Only show Filter icon on the main dashboard (not inside a specific shelf)
                     if (selectedShelfId == null) {
                         IconButton(onClick = { showFilterScreen = true }) {
-                            // You can use Icons.Default.List or Icons.Default.Menu or a Filter icon
                             Icon(Icons.Default.List, contentDescription = "Overview & Filter")
                         }
+                    }
+                    IconButton(onClick = { showProfile = true }) {
+                        Icon(Icons.Default.Person, contentDescription = "Profile")
                     }
                 }
             )
         },
-
         floatingActionButton = {
-            if (selectedShelfId == null) {
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-
+            if (selectedShelfId != null) {
+                // INSIDE SHELF FAB
+                FloatingActionButton(
+                    onClick = {
+                        entryViewModel.resetForm()
+                        entryViewModel.selectedShelfId = selectedShelfId
+                        showItemDialog = true
+                    }
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Item")
+                }
+            } else {
+                // DASHBOARD EXPANDABLE FAB
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     Column(
                         modifier = Modifier
-                            .background(color = if(isFabExpanded) Color(0xFF1F2F4A) else Color.Transparent, shape = RoundedCornerShape(12.dp))
+                            .width(IntrinsicSize.Max)
+                            .background(
+                                color = if (isFabExpanded) Color(0xFF1F2F4A) else Color.Transparent,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {}
                             .padding(16.dp),
                         horizontalAlignment = Alignment.End,
-                        ) {
-                        // MANAGE INVENTORY BUTTON
+                    ) {
+
+                        // 1. MANAGE INVENTORY ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        showManageInventories = true
+                                        isFabExpanded = false
+                                    }
+                                    .padding(vertical = 4.dp), // Add touch padding
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Manage Inventory",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(end = 12.dp)
+                                )
                                 SmallFloatingActionButton(
                                     onClick = { showManageInventories = true; isFabExpanded = false }
                                 ) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
                             }
                         }
 
-                        if(isFabExpanded)
-                            HorizontalDivider(
-                                Modifier.width(180.dp).padding(vertical = 16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant)
+                        if (isFabExpanded) Spacer(modifier = Modifier.height(8.dp))
 
-                        // SCAN BARCODE BUTTON
+                        // 2. SCAN BARCODE ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Scan Barcode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-                                SmallFloatingActionButton(onClick = { showScanner = true; isFabExpanded = false }) {
-                                    Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan Barcode")
-                                }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        showScanner = true
+                                        isFabExpanded = false
+                                    }
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Scan Barcode",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(end = 12.dp)
+                                )
+                                SmallFloatingActionButton(
+                                    onClick = { showScanner = true; isFabExpanded = false }
+                                ) { Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan") }
                             }
                         }
 
-                        if(isFabExpanded)
-                            HorizontalDivider(
-                                Modifier.width(180.dp).padding(vertical = 16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant)
+                        if (isFabExpanded) Spacer(modifier = Modifier.height(8.dp))
 
-                        // ADD ITEM BUTTON
+                        // 3. ADD ITEM ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Add Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 8.dp))
-                                SmallFloatingActionButton(onClick = {
-                                    entryViewModel.resetForm()
-                                    showItemDialog = true; isFabExpanded = false
-                                }) {
-                                    Icon(Icons.Default.ShoppingCart, contentDescription = "Add Item")
-                                }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        entryViewModel.resetForm()
+                                        showItemDialog = true
+                                        isFabExpanded = false
+                                    }
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Add Item",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(end = 12.dp)
+                                )
+                                SmallFloatingActionButton(
+                                    onClick = {
+                                        entryViewModel.resetForm()
+                                        showItemDialog = true
+                                        isFabExpanded = false
+                                    }
+                                ) { Icon(Icons.Default.ShoppingCart, contentDescription = "Add") }
                             }
                         }
                     }
 
+                    // Main + Button
                     FloatingActionButton(onClick = { isFabExpanded = !isFabExpanded }) {
                         Icon(Icons.Default.Add, contentDescription = "Expand", modifier = Modifier.rotate(rotationAngle))
                     }
@@ -292,7 +396,6 @@ fun InventoryScreen(
     ) { innerPadding ->
         Column(modifier = modifier.padding(innerPadding).padding(16.dp)) {
             if (selectedShelf == null) {
-                // DASHBOARD
                 if (uiState.shelves.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("No Shelves! Add one to start.", style = MaterialTheme.typography.headlineSmall)
@@ -309,57 +412,19 @@ fun InventoryScreen(
                     }
                 }
             } else {
-                // DETAIL
+                // DETAIL VIEW
                 ShelfDetailView(
                     shelf = selectedShelf!!,
                     userPrefs = userPrefs,
-                    onDelete = { item -> viewModel.deleteItem(item) },
+
+                    onDelete = { item -> itemToDelete = item },
+
                     onEdit = { item ->
                         entryViewModel.startEditing(item)
                         showItemDialog = true
                     }
                 )
             }
-        }
-
-        // --- DIALOGS ---
-        if (showScanner) {
-            Dialog(onDismissRequest = { showScanner = false },
-                properties = DialogProperties(usePlatformDefaultWidth = false)) {
-                Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-                    BarcodeScanner(onBarcodeFound = { barcode ->
-                        showScanner = false
-                        entryViewModel.onScanResult(barcode)
-                    })
-                    IconButton(onClick = { showScanner = false }, modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
-                        Icon(Icons.Default.Close, "Close", tint = Color.White)
-                    }
-                }
-            }
-        }
-
-        if (entryViewModel.scannedProductPreview != null) {
-            ProductPreviewDialog(
-                product = entryViewModel.scannedProductPreview!!,
-                userPrefs = userPrefs,
-                onDismiss = { entryViewModel.scannedProductPreview = null },
-                onAddToFridge = {
-                    entryViewModel.acceptScannedProduct(context)
-                    showItemDialog = true
-                }
-            )
-        }
-
-        if (showItemDialog) ItemEntryDialog(onDismissRequest = { showItemDialog = false })
-
-        // Note: This logic is mostly redundant since we use ManageInventoryScreen,
-        // but kept here for safety in case other buttons trigger it.
-        if (showInventoryDialog && !showManageInventories) {
-            ShelfEntryDialog(
-                initialName = "", // Default to empty if not managing
-                onDismissRequest = { showInventoryDialog = false },
-                onConfirm = { viewModel.saveShelf(0, it) } // 0 means Create New
-            )
         }
     }
 }
@@ -528,7 +593,8 @@ fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> U
 @Composable
 fun ItemEntryDialog(
     onDismissRequest: () -> Unit,
-    viewModel: ItemEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: ItemEntryViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    onDelete: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val availableShelves by viewModel.availableShelves.collectAsState()
@@ -699,8 +765,8 @@ fun ItemEntryDialog(
                     Row(horizontalArrangement = if(viewModel.currentItemId != null) Arrangement.SpaceBetween else Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                         if(viewModel.currentItemId != null) {
                             TextButton(onClick = {
-                                viewModel.deleteItem() // <--- 1. Call the function
-                                onDismissRequest()     // <--- 2. Close the dialog
+                                onDelete?.invoke()
+                                onDismissRequest()
                             }) {
                                 Text("Delete", color = Color.Red)
                             }
@@ -902,7 +968,6 @@ fun ShelfDetailView(
     } else {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(shelf.items) { item ->
-                // This calls the ItemDetailRow we created in the previous step
                 ItemDetailRow(
                     item = item,
                     userPrefs = userPrefs,
@@ -913,6 +978,7 @@ fun ShelfDetailView(
         }
     }
 }
+
 fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return formatter.format(Date(millis))

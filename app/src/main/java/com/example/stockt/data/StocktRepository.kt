@@ -36,8 +36,8 @@ class StocktRepository(private val dao: StocktDao) {
         dao.insertItem(item.toEntity())
     }
 
-    suspend fun deleteItem(item: Item) {
-        dao.deleteItem(item.toEntity())
+    suspend fun deleteItemById(itemId: Int) {
+        dao.deleteItemById(itemId)
     }
 
     suspend fun deleteShelf(shelf: Shelf) {

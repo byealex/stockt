@@ -31,8 +31,8 @@ interface StocktDao {
     @Query("SELECT * FROM items")
     fun getAllItems(): Flow<List<ItemEntity>>
 
-    @Delete
-    suspend fun deleteItem(itemEntity: ItemEntity)
+    @Query("DELETE FROM items WHERE id = :itemId")
+    suspend fun deleteItemById(itemId: Int)
 
     @Delete
     suspend fun deleteShelf(shelfEntity: ShelfEntity)

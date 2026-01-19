@@ -3,7 +3,7 @@ package com.example.stockt.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stockt.data.StocktRepository
-import com.example.stockt.data.Item // Ensure these imports match your folder structure
+import com.example.stockt.data.Item
 import com.example.stockt.data.Shelf
 import com.example.stockt.data.ShelfWithItems
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,8 +37,6 @@ class InventoryViewModel(private val repository: StocktRepository) : ViewModel()
 
             if (currentList.isEmpty()) {
                 repository.createDefaultFridge()
-
-                // 👇 CHANGE THIS: Use 'insertShelf', not 'saveShelf'
                 repository.insertShelf(Shelf(name = "Pantry", storageId = 1))
                 repository.insertShelf(Shelf(name = "Fridge", storageId = 1))
                 repository.insertShelf(Shelf(name = "Basement", storageId = 1))
@@ -46,29 +44,26 @@ class InventoryViewModel(private val repository: StocktRepository) : ViewModel()
         }
     }
 
-    // 3. SAVE LOCATION (Handles BOTH Add and Edit)
-    // Pass '0' as ID to create new, or the real ID to update.
+    // 3. SAVE LOCATION
     fun saveShelf(id: Int, name: String) {
         if (name.isBlank()) return
 
         viewModelScope.launch {
-            repository.createDefaultFridge() // Safety check
+            repository.createDefaultFridge()
 
             val shelfToSave = Shelf(
                 id = id,
                 name = name,
                 storageId = 1
             )
-
-            // This single function handles insert OR replace
             repository.insertShelf(shelfToSave)
         }
     }
 
-    // 4. DELETE ITEM
+    // 4. DELETE ITEM (Updated to match Repository change)
     fun deleteItem(item: Item) {
         viewModelScope.launch {
-            repository.deleteItem(item)
+            repository.deleteItemById(item.id)
         }
     }
 
