@@ -39,7 +39,9 @@ fun ProductPreviewDialog(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1E293B),
+                contentColor = Color.White)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
 
@@ -65,7 +67,7 @@ fun ProductPreviewDialog(
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 //                Divider()
                 SafetyCheck(safetyStatus)
                 Spacer(modifier = Modifier.height(12.dp))
@@ -75,21 +77,21 @@ fun ProductPreviewDialog(
 //                Spacer(modifier = Modifier.height(8.dp))
 
                 // We use a FlowRow logic (or simplified Column of Rows) to show tags
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Vegetarian Check
-                    if (isVegetarian(product)) {
-                        DietaryChip(text = "Vegetarian", color = Color(0xFF4CAF50)) // Green
-                    } else if (isNonVegetarian(product)) {
-                        DietaryChip(text = "Non-Vegetarian", color = Color.Gray)
-                    }
-
-                    // Gluten Check
-                    if (hasGluten(product)) {
-                        DietaryChip(text = "Contains Gluten", color = Color(0xFFEF5350)) // Red
-                    } else if (isGlutenFree(product)) {
-                        DietaryChip(text = "Gluten Free", color = Color(0xFF4CAF50)) // Green
-                    }
-                }
+//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+//                    // Vegetarian Check
+//                    if (isVegetarian(product)) {
+//                        DietaryChip(text = "Vegetarian", color = Color(0xFF4CAF50)) // Green
+//                    } else if (isNonVegetarian(product)) {
+//                        DietaryChip(text = "Non-Vegetarian", color = Color.Gray)
+//                    }
+//
+//                    // Gluten Check
+//                    if (hasGluten(product)) {
+//                        DietaryChip(text = "Contains Gluten", color = Color(0xFFEF5350)) // Red
+//                    } else if (isGlutenFree(product)) {
+//                        DietaryChip(text = "Gluten Free", color = Color(0xFF4CAF50)) // Green
+//                    }
+//                }
 
                 // Additional Allergens (Simplified)
                 val allergens = getAllergensList(product)

@@ -281,7 +281,7 @@ fun InventoryScreen(
                 actions = {
                     if (selectedShelfId == null) {
                         IconButton(onClick = { showFilterScreen = true }) {
-                            Icon(Icons.Default.List, contentDescription = "Overview & Filter")
+                            Icon(Icons.Default.FilterList, contentDescription = "Overview & Filter")
                         }
                     }
                     IconButton(onClick = { showProfile = true }) {
@@ -647,7 +647,8 @@ fun ItemEntryDialog(
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E293B)
+            containerColor = Color(0xFF1E293B),
+            contentColor = Color.White
         )) {
 
             // 1. LOADING STATE (If fetching from API)
