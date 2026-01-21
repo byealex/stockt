@@ -167,7 +167,10 @@ fun InventoryScreen(
 
     // ✅ SCANNER
     if (showScanner) {
-        Dialog(onDismissRequest = { showScanner = false }) {
+        Dialog(
+            onDismissRequest = { showScanner = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                 BarcodeScanner(onBarcodeFound = { barcode ->
                     showScanner = false
