@@ -638,7 +638,7 @@ fun ItemEntryDialog(
     }
 
     // Auto-select shelf name if editing an existing item
-    LaunchedEffect(viewModel.selectedShelfId) {
+    LaunchedEffect(viewModel.selectedShelfId, availableShelves) {
         if (viewModel.selectedShelfId != null) {
             val shelf = availableShelves.find { it.shelf.id == viewModel.selectedShelfId }
             if (shelf != null) selectedShelfName = shelf.shelf.name
