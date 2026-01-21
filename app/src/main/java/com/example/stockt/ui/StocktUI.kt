@@ -59,6 +59,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 
 // --- COLORS ---
@@ -520,7 +522,24 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                 }
             }
 
-            Box(modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)))
+            Box(modifier = Modifier
+                .fillMaxHeight()
+                .width(40.dp)
+                .background(color = getExpiryColor(item.expiryDate))) {
+                val txt = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> "Expiring"
+                    getExpiryColor(item.expiryDate) == ColorExpired -> "Expired"
+                    else -> "Fresh"
+                }
+
+                Text(
+                    text = txt,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.rotate(90f),
+                    style = TextStyle(fontSize = 11.sp)
+                )
+            }
         }
     }
 }
