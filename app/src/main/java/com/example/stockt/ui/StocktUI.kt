@@ -75,7 +75,7 @@ fun StocktApp(
 
     // 1. Loading State (Wait for DataStore to read disk)
     if (userPrefs == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.fillMaxWidth() , contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
     }
