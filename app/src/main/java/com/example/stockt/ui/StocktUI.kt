@@ -525,9 +525,12 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
             Box(modifier = Modifier
                 .fillMaxHeight()
                 .width(40.dp)
-                .background(color = getExpiryColor(item.expiryDate))) {
+                .background(color = getExpiryColor(item.expiryDate)),
+
+                contentAlignment = Alignment.Center
+            ) {
                 val txt = when {
-                    getExpiryColor(item.expiryDate) == ColorWarning -> "Expiring"
+                    getExpiryColor(item.expiryDate) == ColorWarning -> "Soon"
                     getExpiryColor(item.expiryDate) == ColorExpired -> "Expired"
                     else -> "Fresh"
                 }
@@ -537,7 +540,11 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                     maxLines = 1,
                     softWrap = false,
                     modifier = Modifier.rotate(90f),
-                    style = TextStyle(fontSize = 11.sp)
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 )
             }
         }
