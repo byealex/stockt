@@ -44,6 +44,9 @@ class StocktRepository(private val dao: StocktDao) {
         dao.deleteShelf(shelf.toEntity())
     }
 
+    suspend fun updateShelfName(id: Int, newName: String) {
+        dao.updateShelfName(id, newName)
+    }
 }
 
 
