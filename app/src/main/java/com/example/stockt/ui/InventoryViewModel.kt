@@ -49,14 +49,12 @@ class InventoryViewModel(private val repository: StocktRepository) : ViewModel()
         if (name.isBlank()) return
 
         viewModelScope.launch {
-            repository.createDefaultFridge()
-
-            val shelfToSave = Shelf(
-                id = id,
-                name = name,
-                storageId = 1
-            )
-            repository.insertShelf(shelfToSave)
+            if (id == 0) {
+                val shelf = Shelf(name = name, storageId = 1)
+                repository.insertShelf(shelf)
+            } else {
+                repository.updateShelfName(id, name)
+            }
         }
     }
 

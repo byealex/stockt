@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.example.stockt.data.Shelf
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -37,8 +38,8 @@ interface StocktDao {
     @Delete
     suspend fun deleteShelf(shelfEntity: ShelfEntity)
 
-
-
+    @Query("UPDATE shelves SET name = :newName WHERE id = :shelfId")
+    suspend fun updateShelfName(shelfId: Int, newName: String)
     @Update
     suspend fun updateItem(itemEntity: ItemEntity)
 }

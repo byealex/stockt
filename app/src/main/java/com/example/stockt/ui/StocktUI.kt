@@ -57,6 +57,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 
 // --- COLORS ---
 val ColorExpired = Color(0xFFEF5350)
@@ -105,6 +108,16 @@ fun InventoryScreen(
     var itemToDelete by remember { mutableStateOf<Item?>(null) }
     var showItemDialog by remember { mutableStateOf(false) }
     var showScanner by remember { mutableStateOf(false) }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showScanner = true
+        } else {
+
+        }
+    }
 
     // 2. DEFINE DIALOGS IMMEDIATELY (So they are always active)
 
@@ -332,13 +345,19 @@ fun InventoryScreen(
 
                         // 2. SCAN BARCODE ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                            val onScanClick = {
+                                val permission = Manifest.permission.CAMERA
+                                if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                                    showScanner = true
+                                } else {
+                                    cameraPermissionLauncher.launch(permission)
+                                }
+                                isFabExpanded = false
+                            }
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
-                                        showScanner = true
-                                        isFabExpanded = false
-                                    }
+                                    .clickable { onScanClick() }
                                     .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
@@ -349,7 +368,7 @@ fun InventoryScreen(
                                     modifier = Modifier.padding(end = 12.dp)
                                 )
                                 SmallFloatingActionButton(
-                                    onClick = { showScanner = true; isFabExpanded = false }
+                                    onClick = { onScanClick() }
                                 ) { Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan") }
                             }
                         }
