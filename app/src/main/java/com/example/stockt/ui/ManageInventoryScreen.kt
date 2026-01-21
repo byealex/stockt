@@ -8,6 +8,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,43 +59,58 @@ fun ManageInventoryScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.padding(innerPadding).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 items(shelves) { shelfWithItems ->
-                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                    ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier
+                                .fillMaxWidth(),
+//                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
                                 Text(
                                     text = shelfWithItems.shelf.name,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "${shelfWithItems.items.size} items inside",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = shelfWithItems.items.size.toString(),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF6A798C)
                                 )
                             }
 
-                            // EDIT BUTTON
+                            // ✏️ EDIT BUTTON
                             IconButton(onClick = {
                                 shelfToEdit = shelfWithItems.shelf
                                 showEntryDialog = true
                             }) {
-                                Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
+                                Icon(
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = "Edit Inventory",
+                                    tint = Color(0xFF9E9E9E)
+                                )
                             }
 
                             // DELETE BUTTON (Triggers local warning)
                             IconButton(onClick = { shelfToDelete = shelfWithItems.shelf }) {
-                                Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Outlined.Delete, "Delete", tint = Color.Red)
                             }
                         }
                     }
                 }
             }
+
         }
 
         if (showEntryDialog) {
