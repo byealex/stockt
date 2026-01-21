@@ -24,18 +24,13 @@ fun ProfileScreen(
     viewModel: UserSettingsViewModel = viewModel()
 ) {
     val prefsState by viewModel.userPreferences.collectAsState()
-    val prefs = prefsState ?: return // Loading state: Show nothing until data loads
-
-    // Create a local mutable copy of the preferences to edit
-    // We use 'remember' so the UI doesn't jump around while typing/toggling
+    val prefs = prefsState ?: return
     var currentPrefs by remember { mutableStateOf(prefs) }
 
-    // If the data on disk changes (rare), sync our local copy
     LaunchedEffect(prefs) { currentPrefs = prefs }
 
     Scaffold(
         topBar = {
-            // Only show the Back button if we are NOT in onboarding
             if (!isFirstTime) {
                 CenterAlignedTopAppBar(
                     title = { Text("Dietary Preferences") },
@@ -46,27 +41,14 @@ fun ProfileScreen(
                     }
                 )
             }
-        },
-        bottomBar = {
-            // The main action button
-            Button(
-                onClick = {
-                    viewModel.savePreferences(currentPrefs)
-                    if (isFirstTime) viewModel.completeOnboarding()
-                    onFinished()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(50.dp)
-            ) {
-                Text(if (isFirstTime) "Get Started" else "Save Changes")
-            }
         }
+        // 👇 STEP 1: REMOVE the 'bottomBar' block entirely.
+        // We are moving the button inside the body instead.
+
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(innerPadding) // ✅ This padding now protects the button too!
                 .verticalScroll(rememberScrollState())
         ) {
             // 1. ONBOARDING HEADER
@@ -76,7 +58,6 @@ fun ProfileScreen(
 
             // 2. LIFESTYLE SECTION
             SectionTitle("Lifestyle & Diet")
-
             SwitchRow("Vegetarian", currentPrefs.isVegetarian) {
                 currentPrefs = currentPrefs.copy(isVegetarian = it)
             }
@@ -91,7 +72,6 @@ fun ProfileScreen(
 
             // 3. ALLERGENS SECTION
             SectionTitle("Allergens (I avoid...)")
-
             SwitchRow("Gluten", currentPrefs.avoidGluten) {
                 currentPrefs = currentPrefs.copy(avoidGluten = it)
             }
@@ -114,8 +94,25 @@ fun ProfileScreen(
                 currentPrefs = currentPrefs.copy(avoidFish = it)
             }
 
-            // Extra space at bottom so the button doesn't cover the last item
-            Spacer(modifier = Modifier.height(80.dp))
+            // 👇 STEP 2: PASTE THE BUTTON HERE (Inside the Column)
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = {
+                    viewModel.savePreferences(currentPrefs)
+                    if (isFirstTime) viewModel.completeOnboarding()
+                    onFinished()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(50.dp)
+            ) {
+                Text(if (isFirstTime) "Get Started" else "Save Changes")
+            }
+
+            // Optional: Add a little extra space at the very bottom
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
