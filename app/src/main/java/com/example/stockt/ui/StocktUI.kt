@@ -330,8 +330,8 @@ fun InventoryScreen(
                                     .clickable {
                                         showManageInventories = true
                                         isFabExpanded = false
-                                    }
-                                    .padding(vertical = 4.dp), // Add touch padding
+                                    },
+//                                    .padding(vertical = 4.dp), // Add touch padding
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -346,7 +346,11 @@ fun InventoryScreen(
                             }
                         }
 
-                        if (isFabExpanded) Spacer(modifier = Modifier.height(8.dp))
+                        if (isFabExpanded)
+                            HorizontalDivider(
+                                Modifier.width(180.dp).padding(vertical = 16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant)
+
 
                         // 2. SCAN BARCODE ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
@@ -362,8 +366,8 @@ fun InventoryScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onScanClick() }
-                                    .padding(vertical = 4.dp),
+                                    .clickable { onScanClick() },
+//                                    .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -378,7 +382,10 @@ fun InventoryScreen(
                             }
                         }
 
-                        if (isFabExpanded) Spacer(modifier = Modifier.height(8.dp))
+                        if (isFabExpanded)
+                            HorizontalDivider(
+                                Modifier.width(180.dp).padding(vertical = 16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant)
 
                         // 3. ADD ITEM ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
@@ -389,8 +396,8 @@ fun InventoryScreen(
                                         entryViewModel.resetForm()
                                         showItemDialog = true
                                         isFabExpanded = false
-                                    }
-                                    .padding(vertical = 4.dp),
+                                    },
+//                                    .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
