@@ -6,6 +6,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -60,15 +63,49 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
             }
 
             Box(
-                modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)),
-                contentAlignment = Alignment.Center
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(40.dp)
+                    .background(getExpiryColor(item.expiryDate))
+//                    .background(Color(0xFFA2A2A2))
             ) {
-                val txt = when (getExpiryColor(item.expiryDate)) {
-                    ColorWarning -> "Soon"
-                    ColorExpired -> "Expired"
+                val txt = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> "Soon"
+                    getExpiryColor(item.expiryDate) == ColorExpired -> "Expired"
                     else -> "Fresh"
                 }
-                Text(text = txt, maxLines = 1, softWrap = false, modifier = Modifier.rotate(90f), style = TextStyle(fontSize = 11.sp, color = Color.Black, fontWeight = FontWeight.SemiBold))
+
+                val ic = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> Icons.Outlined.AccessTime
+                    getExpiryColor(item.expiryDate) == ColorExpired -> Icons.Outlined.WarningAmber
+                    else -> Icons.Outlined.CheckCircle
+                }
+
+                // 🔝 Top-centered icon
+//                Icon(
+//                    ic,
+//                    contentDescription = "Expiry Icon",
+//                    modifier = Modifier
+//                        .align(Alignment.TopCenter)
+//                        .padding(top = 8.dp)
+//                        .size(16.dp),
+//                    tint = Color.Black
+//                )
+
+                // 🎯 Perfectly centered rotated text
+                Text(
+                    text = txt,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .rotate(90f),
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
             }
         }
     }
@@ -107,7 +144,52 @@ fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> U
                     }
                 }
             }
-            Box(modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(40.dp)
+                    .background(getExpiryColor(item.expiryDate))
+//                    .background(Color(0xFFA2A2A2))
+            ) {
+                val txt = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> "Soon"
+                    getExpiryColor(item.expiryDate) == ColorExpired -> "Expired"
+                    else -> "Fresh"
+                }
+
+                val ic = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> Icons.Outlined.AccessTime
+                    getExpiryColor(item.expiryDate) == ColorExpired -> Icons.Outlined.WarningAmber
+                    else -> Icons.Outlined.CheckCircle
+                }
+
+                // 🔝 Top-centered icon
+//                Icon(
+//                    ic,
+//                    contentDescription = "Expiry Icon",
+//                    modifier = Modifier
+//                        .align(Alignment.TopCenter)
+//                        .padding(top = 8.dp)
+//                        .size(16.dp),
+//                    tint = Color.Black
+//                )
+
+                // 🎯 Perfectly centered rotated text
+                Text(
+                    text = txt,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .rotate(90f),
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
         }
     }
 }

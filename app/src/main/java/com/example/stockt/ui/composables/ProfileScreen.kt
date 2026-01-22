@@ -7,6 +7,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Egg
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -134,9 +136,9 @@ fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Uni
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            thumbContent = if (checked) {
-                { Icon(Icons.Default.Check, null, Modifier.size(12.dp)) }
-            } else null
+//            thumbContent = if (checked) {
+//                { Icon(Icons.Default.Check, null, Modifier.size(12.dp)) }
+//            } else null
         )
     }
 }

@@ -233,6 +233,10 @@ fun InventoryScreen(
                         IconButton(onClick = { selectedShelfId = null }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
+                    } else {
+                        IconButton(onClick = { showProfile = true }) {
+                            Icon(Icons.Default.Person, contentDescription = "Profile")
+                        }
                     }
                 },
                 actions = {
@@ -241,9 +245,9 @@ fun InventoryScreen(
                             Icon(Icons.Default.FilterList, contentDescription = "Filter")
                         }
                     }
-                    IconButton(onClick = { showProfile = true }) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
-                    }
+//                    IconButton(onClick = { showProfile = true }) {
+//                        Icon(Icons.Default.Person, contentDescription = "Profile")
+//                    }
                 }
             )
         },
@@ -277,14 +281,12 @@ fun InventoryScreen(
                         // 1. MANAGE INVENTORY ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { showManageInventories = true; isFabExpanded = false },
+                                modifier = Modifier.fillMaxWidth().clickable { entryViewModel.resetForm(); showItemDialog = true; isFabExpanded = false },
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 12.dp))
-                                SmallFloatingActionButton(onClick = { showManageInventories = true; isFabExpanded = false }) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
+                                Text("Add Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 12.dp))
+                                SmallFloatingActionButton(onClick = { entryViewModel.resetForm(); showItemDialog = true; isFabExpanded = false }) { Icon(Icons.Default.ShoppingCart, contentDescription = "Add") }
                             }
                         }
 
@@ -316,14 +318,17 @@ fun InventoryScreen(
                         // 3. ADD ITEM ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                             Row(
-                                modifier = Modifier.fillMaxWidth().clickable { entryViewModel.resetForm(); showItemDialog = true; isFabExpanded = false },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showManageInventories = true; isFabExpanded = false },
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Add Item", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 12.dp))
-                                SmallFloatingActionButton(onClick = { entryViewModel.resetForm(); showItemDialog = true; isFabExpanded = false }) { Icon(Icons.Default.ShoppingCart, contentDescription = "Add") }
+                                Text("Manage Inventory", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(end = 12.dp))
+                                SmallFloatingActionButton(onClick = { showManageInventories = true; isFabExpanded = false }) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
                             }
                         }
+
                     }
                     FloatingActionButton(onClick = { isFabExpanded = !isFabExpanded }) {
                         Icon(Icons.Default.Add, contentDescription = "Expand", modifier = Modifier.rotate(rotationAngle))
