@@ -11,11 +11,8 @@ import kotlinx.coroutines.launch
 
 class UserSettingsViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Initialize the repository
     private val repository = UserPreferencesRepository(application)
 
-    // Expose the preferences as a StateFlow for the UI
-    // It starts as null (loading) and then updates whenever data changes on disk
     val userPreferences = repository.userPreferencesFlow
         .stateIn(
             scope = viewModelScope,
@@ -23,14 +20,12 @@ class UserSettingsViewModel(application: Application) : AndroidViewModel(applica
             initialValue = null
         )
 
-    // Mark onboarding as done so the user goes straight to Inventory next time
     fun completeOnboarding() {
         viewModelScope.launch {
             repository.completeOnboarding()
         }
     }
 
-    // Save the entire preferences object
     fun savePreferences(newPrefs: UserPreferences) {
         viewModelScope.launch {
             repository.updatePreferences(newPrefs)

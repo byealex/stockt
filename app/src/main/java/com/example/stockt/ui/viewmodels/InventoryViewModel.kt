@@ -36,7 +36,7 @@ class InventoryViewModel(private val repository: StocktRepository) : ViewModel()
             val currentList = repository.getShelvesForStorageUnit(1).first()
 
             if (currentList.isEmpty()) {
-                repository.createDefaultFridge()
+                repository.createDefaultInventory()
                 repository.insertShelf(Shelf(name = "Pantry", storageId = 1))
                 repository.insertShelf(Shelf(name = "Fridge", storageId = 1))
                 repository.insertShelf(Shelf(name = "Basement", storageId = 1))

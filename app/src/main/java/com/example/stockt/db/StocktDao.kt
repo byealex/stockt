@@ -13,17 +13,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface StocktDao {
 
-    // --- 1. Inserting Data ---
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertStorageUnit(storageUnit: StorageUnitEntity): Long
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertShelf(shelfEntity: ShelfEntity): Long
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(itemEntity: ItemEntity): Long
-
-
-    // --- 2. Reading Data ---
-    // (Everything else below is fine)
 
     @Transaction
     @Query("SELECT * FROM shelves WHERE storageid = :storageId")

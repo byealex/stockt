@@ -67,9 +67,7 @@ fun ManageInventoryScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth(),
-//                                .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
-//                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(
                                 modifier = Modifier.weight(1f),
@@ -89,7 +87,7 @@ fun ManageInventoryScreen(
                                 )
                             }
 
-                            // ✏️ EDIT BUTTON
+                            // Edit Button
                             IconButton(onClick = {
                                 shelfToEdit = shelfWithItems.shelf
                                 showEntryDialog = true
@@ -101,7 +99,7 @@ fun ManageInventoryScreen(
                                 )
                             }
 
-                            // DELETE BUTTON (Triggers local warning)
+                            // Delete Button
                             IconButton(onClick = { shelfToDelete = shelfWithItems.shelf }) {
                                 Icon(Icons.Outlined.Delete, "Delete", tint = Color.Red)
                             }

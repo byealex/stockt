@@ -18,7 +18,7 @@ import com.example.stockt.data.UserPreferences
 import com.example.stockt.ui.composables.ItemDetailRow
 import com.example.stockt.ui.getDaysRemaining
 
-// Define our Filter Options
+// Filter Options
 enum class FilterOption(val label: String) {
     ALL("All Items"),
     EXPIRED("Expired"),
@@ -35,16 +35,16 @@ fun FilterScreen(
     onEdit: (Item) -> Unit,
     onDelete: (Item) -> Unit
 ) {
-    // 1. FLATTEN DATA: Combine all shelves into one big list of items
+    // Get all items in a big list
     val allItems = remember(shelves) {
         shelves.flatMap { it.items }
             .sortedBy { it.expiryDate } // Always sort by date (soonest first)
     }
 
-    // 2. STATE: Which filter is selected?
+    // Check what filter is selected
     var selectedFilter by remember { mutableStateOf(FilterOption.ALL) }
 
-    // 3. FILTER LOGIC
+    // Filter the items based on the selected filter
     val displayedItems = remember(allItems, selectedFilter) {
         when (selectedFilter) {
             FilterOption.ALL -> allItems
@@ -71,7 +71,7 @@ fun FilterScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
 
-            // --- FILTER CHIPS ROW ---
+            // Filter Top Row
             ScrollableTabRow(
                 selectedTabIndex = selectedFilter.ordinal,
                 edgePadding = 16.dp,
@@ -93,7 +93,7 @@ fun FilterScreen(
                 }
             }
 
-            // --- THE LIST ---
+            // List
             if (displayedItems.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(

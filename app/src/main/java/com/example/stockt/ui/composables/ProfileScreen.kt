@@ -45,21 +45,18 @@ fun ProfileScreen(
                 )
             }
         }
-        // 👇 STEP 1: REMOVE the 'bottomBar' block entirely.
-        // We are moving the button inside the body instead.
 
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding) // ✅ This padding now protects the button too!
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // 1. ONBOARDING HEADER
             if (isFirstTime) {
                 HeaderSection()
             }
 
-            // 2. LIFESTYLE SECTION
+            // Dietary Restrictions & Allergies
             SectionTitle("Lifestyle & Diet")
             SwitchRow("Vegetarian", currentPrefs.isVegetarian) {
                 currentPrefs = currentPrefs.copy(isVegetarian = it)
@@ -73,7 +70,6 @@ fun ProfileScreen(
 
             Divider(modifier = Modifier.padding(vertical = 16.dp))
 
-            // 3. ALLERGENS SECTION
             SectionTitle("Allergens (I avoid...)")
             SwitchRow("Gluten", currentPrefs.avoidGluten) {
                 currentPrefs = currentPrefs.copy(avoidGluten = it)
@@ -97,7 +93,6 @@ fun ProfileScreen(
                 currentPrefs = currentPrefs.copy(avoidFish = it)
             }
 
-            // 👇 STEP 2: PASTE THE BUTTON HERE (Inside the Column)
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
@@ -114,13 +109,12 @@ fun ProfileScreen(
                 Text(if (isFirstTime) "Get Started" else "Save Changes")
             }
 
-            // Optional: Add a little extra space at the very bottom
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
-// --- HELPER COMPOSABLES ---
+// Composables for the Profile SCreen
 
 @Composable
 fun SwitchRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {

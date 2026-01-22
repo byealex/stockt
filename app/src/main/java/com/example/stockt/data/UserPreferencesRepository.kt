@@ -9,22 +9,18 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-// 1. EXTENSION PROPERTY: This creates the single instance of DataStore
-// named "user_settings" on your phone storage.
+
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_settings")
 
 class UserPreferencesRepository(private val context: Context) {
 
-    // 2. KEYS: These are the unique IDs for each setting
     companion object {
         val IS_FIRST_RUN = booleanPreferencesKey("is_first_run")
 
-        // DIETS
+        // Allergies & Dietary Restrictions
         val PREF_VEGETARIAN = booleanPreferencesKey("pref_vegetarian")
         val PREF_VEGAN = booleanPreferencesKey("pref_vegan")
         val PREF_PALM_OIL_FREE = booleanPreferencesKey("pref_palm_oil_free")
-
-        // ALLERGENS (True = User wants to AVOID this)
         val AVOID_GLUTEN = booleanPreferencesKey("avoid_gluten")
         val AVOID_MILK = booleanPreferencesKey("avoid_milk")
         val AVOID_EGGS = booleanPreferencesKey("avoid_eggs")
@@ -34,8 +30,7 @@ class UserPreferencesRepository(private val context: Context) {
         val AVOID_FISH = booleanPreferencesKey("avoid_fish")
     }
 
-    // 3. READ DATA: This Flow emits a new UserPreferences object
-    // every time something changes on disk.
+    // Onboarding for the first time when user opens app
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
         .map { preferences ->
             UserPreferences(
@@ -53,14 +48,14 @@ class UserPreferencesRepository(private val context: Context) {
             )
         }
 
-    // 4. WRITE DATA: Complete Onboarding (Set First Run = false)
+    // Checks if the user has completed onboarding
     suspend fun completeOnboarding() {
         context.dataStore.edit { preferences ->
             preferences[IS_FIRST_RUN] = false
         }
     }
 
-    // 5. WRITE DATA: Update all dietary preferences at once
+    // Update Preferences
     suspend fun updatePreferences(newPrefs: UserPreferences) {
         context.dataStore.edit { prefs ->
             prefs[PREF_VEGETARIAN] = newPrefs.isVegetarian

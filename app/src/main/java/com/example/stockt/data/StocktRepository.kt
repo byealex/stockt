@@ -9,25 +9,23 @@ import kotlinx.coroutines.flow.map
 
 class StocktRepository(private val dao: StocktDao) {
 
-    //temp solution
-    suspend fun createDefaultFridge() {
-        // We force ID = 1 so our hardcoded app logic works
+    suspend fun createDefaultInventory() {
         dao.insertStorageUnit(
             com.example.stockt.db.StorageUnitEntity(
                 id = 1,
-                name = "Default Fridge"
+                name = "Personal Inventory"
             )
         )
     }
 
-    // --- READING ---
+    // reading
     fun getShelvesForStorageUnit(storageUnitId: Int): Flow<List<ShelfWithItems>> {
         return dao.getShelvesWithItemsForUnit(storageUnitId).map {
             relationList -> relationList.map { it.toDomainModel() }
         }
     }
 
-    // --- WRITING ---
+    // writing
     suspend fun insertShelf(shelf: Shelf): Int {
         return dao.insertShelf(shelf.toEntity()).toInt()
     }

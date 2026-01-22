@@ -22,7 +22,7 @@ import java.net.URL
 
 class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel() {
 
-    // Helper to get shelf list for the dropdown
+    // Get the Dropdowns for the available inventories
     val availableShelves: StateFlow<List<ShelfWithItems>> =
         repository.getShelvesForStorageUnit(1)
             .stateIn(
@@ -31,8 +31,6 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
                 initialValue = emptyList()
             )
 
-    // FORM STATES
-    // ⚠️ NEW: We must track the ID. If null, we are Adding. If number, we are Editing.
     var currentItemId by mutableStateOf<Int?>(null)
 
     var itemName by mutableStateOf("")
@@ -40,39 +38,29 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
     var selectedExpiryDate by mutableStateOf<Long?>(null)
     var selectedImagePath by mutableStateOf<String?>(null)
 
-    // TAGS (For "Safe/Risk" logic)
     var scannedAnalysisTags by mutableStateOf<String?>(null)
     var scannedAllergenTags by mutableStateOf<String?>(null)
 
-    // API STATES
     var isLoading by mutableStateOf(false)
     var scanError by mutableStateOf<String?>(null)
     var scannedProductPreview by mutableStateOf<ProductData?>(null)
 
-    // --- 1. START EDITING (Called when you click the Pencil) ---
     fun startEditing(item: Item) {
-        // ⚠️ IMPORTANT: Save the ID so we update the existing row later
         currentItemId = item.id
 
-        // Fill the form with existing data
         itemName = item.name
         selectedShelfId = item.shelfId
         selectedExpiryDate = item.expiryDate
         selectedImagePath = item.imagePath
 
-        // Load the existing tags too, so they don't get lost
         scannedAnalysisTags = item.analysisTags
         scannedAllergenTags = item.allergenTags
     }
 
-    // --- 2. RESET FORM (Called when you click Add Item) ---
     fun resetForm() {
-        // ⚠️ IMPORTANT: Clear the ID so we create a NEW item
         currentItemId = null
 
         itemName = ""
-        // We generally keep the shelf ID selected to make adding multiple items faster,
-        // or you can set it to null: selectedShelfId = null
         selectedExpiryDate = null
         selectedImagePath = null
         scannedAnalysisTags = null
@@ -81,11 +69,9 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
         scannedProductPreview = null
     }
 
-    // --- 3. SAVE ITEM (Called when you click Save) ---
     fun saveItem() {
         if (itemName.isNotBlank() && selectedShelfId != null) {
             val itemToSave = Item(
-                // ⚠️ IMPORTANT: If editing, use old ID. If adding, use 0 (Room auto-generates).
                 id = currentItemId ?: 0,
 
                 name = itemName,
@@ -97,16 +83,13 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
             )
 
             viewModelScope.launch {
-                // Insert with OnConflictStrategy.REPLACE will handle both Add and Edit
                 repository.insertItem(itemToSave)
 
-                // Optional: Reset form immediately after saving
                 resetForm()
             }
         }
     }
 
-    // --- 4. SCANNER LOGIC ---
     fun onScanResult(barcode: String) {
         viewModelScope.launch {
             isLoading = true
@@ -131,7 +114,6 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
     fun acceptScannedProduct(context: Context) {
         val product = scannedProductPreview ?: return
 
-        // Don't fully reset, we might want to keep the selected shelf
         val currentShelf = selectedShelfId
         resetForm()
         selectedShelfId = currentShelf
@@ -184,7 +166,7 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
     fun createDefaultShelf() {
         // Logic to create a shelf if none exist
         viewModelScope.launch {
-            repository.createDefaultFridge()
+            repository.createDefaultInventory()
         }
     }
 }

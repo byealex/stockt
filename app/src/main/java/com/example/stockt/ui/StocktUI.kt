@@ -362,10 +362,7 @@ fun InventoryScreen(
     }
 }
 
-// ==========================================
-//  HELPER FUNCTIONS
-// ==========================================
-
+// Helper Functions
 fun createImageFile(context: Context): Pair<File, Uri> {
     val directory = File(context.externalCacheDir, "camera_photos")
     if (!directory.exists()) directory.mkdirs()

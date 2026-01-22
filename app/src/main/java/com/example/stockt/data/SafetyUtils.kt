@@ -4,7 +4,7 @@ enum class SafetyStatus { SAFE, WARNING, UNKNOWN}
 
 object SafetyUtils {
 
-    // Existing function for Item objects
+    // Item Ticket safety check
     fun checkSafety(item: Item, prefs: UserPreferences): SafetyStatus {
         val analysisList = item.analysisTags?.split(",") ?: emptyList()
         val allergenList = item.allergenTags?.split(",") ?: emptyList()
@@ -12,7 +12,7 @@ object SafetyUtils {
         return evaluateSafety(analysisList, allergenList, prefs)
     }
 
-    // NEW: Overloaded function for ProductData objects
+    // Barcode Scan safety check
     fun checkSafety(product: ProductData, prefs: UserPreferences): SafetyStatus {
         val analysisList = product.ingredients_analysis_tags ?: emptyList()
         val allergenList = product.allergens_tags ?: emptyList()
@@ -20,18 +20,15 @@ object SafetyUtils {
         return evaluateSafety(analysisList, allergenList, prefs)
     }
 
-    // Shared evaluation logic
+    // Checks for safety based on preferences
     private fun evaluateSafety(
         analysisList: List<String>,
         allergenList: List<String>,
         prefs: UserPreferences
     ): SafetyStatus {
-        // 1. CHECK DIET
         if (prefs.isVegetarian && !containsTag(analysisList, "en:vegetarian")) return SafetyStatus.WARNING
         if (prefs.isVegan && !containsTag(analysisList, "en:vegan")) return SafetyStatus.WARNING
         if (prefs.isPalmOilFree && containsTag(analysisList, "en:palm-oil")) return SafetyStatus.WARNING
-
-        // 2. CHECK ALLERGENS
         if (prefs.avoidGluten && hasAllergen(allergenList, "gluten")) return SafetyStatus.WARNING
         if (prefs.avoidMilk && hasAllergen(allergenList, "milk")) return SafetyStatus.WARNING
         if (prefs.avoidEggs && hasAllergen(allergenList, "egg")) return SafetyStatus.WARNING
