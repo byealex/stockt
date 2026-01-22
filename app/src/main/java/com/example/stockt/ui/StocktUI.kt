@@ -99,7 +99,7 @@ fun InventoryScreen(
                         viewModel.deleteItem(itemToDelete!!)
                         itemToDelete = null
                     },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
                 ) { Text("Delete") }
             },
             dismissButton = { TextButton(onClick = { itemToDelete = null }) { Text("Cancel") } }

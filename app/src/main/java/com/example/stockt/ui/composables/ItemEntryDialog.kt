@@ -103,7 +103,6 @@ fun ItemEntryDialog(
                                 } else Modifier
                             )
                             .clip(RoundedCornerShape(12.dp))
-                            // 👇 UPDATED CLICK LISTENER
                             .clickable {
                                 val permission = Manifest.permission.CAMERA
                                 if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
