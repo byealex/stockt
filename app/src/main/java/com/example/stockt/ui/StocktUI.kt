@@ -59,6 +59,9 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -322,27 +325,32 @@ fun InventoryScreen(
                         horizontalAlignment = Alignment.End,
                     ) {
 
-                        // 1. MANAGE INVENTORY ROW
+                        // 3. ADD ITEM ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        showManageInventories = true
+                                        entryViewModel.resetForm()
+                                        showItemDialog = true
                                         isFabExpanded = false
                                     },
-//                                    .padding(vertical = 4.dp), // Add touch padding
+//                                    .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Manage Inventory",
+                                    text = "Add Item",
                                     style = MaterialTheme.typography.labelLarge,
                                     modifier = Modifier.padding(end = 12.dp)
                                 )
                                 SmallFloatingActionButton(
-                                    onClick = { showManageInventories = true; isFabExpanded = false }
-                                ) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
+                                    onClick = {
+                                        entryViewModel.resetForm()
+                                        showItemDialog = true
+                                        isFabExpanded = false
+                                    }
+                                ) { Icon(Icons.Default.ShoppingCart, contentDescription = "Add") }
                             }
                         }
 
@@ -387,32 +395,27 @@ fun InventoryScreen(
                                 Modifier.width(180.dp).padding(vertical = 16.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant)
 
-                        // 3. ADD ITEM ROW
+                        // 1. MANAGE INVENTORY ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        entryViewModel.resetForm()
-                                        showItemDialog = true
+                                        showManageInventories = true
                                         isFabExpanded = false
                                     },
-//                                    .padding(vertical = 4.dp),
+//                                    .padding(vertical = 4.dp), // Add touch padding
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Add Item",
+                                    text = "Manage Inventory",
                                     style = MaterialTheme.typography.labelLarge,
                                     modifier = Modifier.padding(end = 12.dp)
                                 )
                                 SmallFloatingActionButton(
-                                    onClick = {
-                                        entryViewModel.resetForm()
-                                        showItemDialog = true
-                                        isFabExpanded = false
-                                    }
-                                ) { Icon(Icons.Default.ShoppingCart, contentDescription = "Add") }
+                                    onClick = { showManageInventories = true; isFabExpanded = false }
+                                ) { Icon(Icons.Default.Edit, contentDescription = "Inventory") }
                             }
                         }
                     }
@@ -529,12 +532,12 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                 }
             }
 
-            Box(modifier = Modifier
-                .fillMaxHeight()
-                .width(40.dp)
-                .background(color = getExpiryColor(item.expiryDate)),
-
-                contentAlignment = Alignment.Center
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(40.dp)
+                    .background(getExpiryColor(item.expiryDate))
+//                    .background(Color(0xFFA2A2A2))
             ) {
                 val txt = when {
                     getExpiryColor(item.expiryDate) == ColorWarning -> "Soon"
@@ -542,11 +545,31 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                     else -> "Fresh"
                 }
 
+                val ic = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> Icons.Outlined.AccessTime
+                    getExpiryColor(item.expiryDate) == ColorExpired -> Icons.Outlined.WarningAmber
+                    else -> Icons.Outlined.CheckCircle
+                }
+
+                // 🔝 Top-centered icon
+//                Icon(
+//                    ic,
+//                    contentDescription = "Expiry Icon",
+//                    modifier = Modifier
+//                        .align(Alignment.TopCenter)
+//                        .padding(top = 8.dp)
+//                        .size(16.dp),
+//                    tint = Color.Black
+//                )
+
+                // 🎯 Perfectly centered rotated text
                 Text(
                     text = txt,
                     maxLines = 1,
                     softWrap = false,
-                    modifier = Modifier.rotate(90f),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .rotate(90f),
                     style = TextStyle(
                         fontSize = 11.sp,
                         color = Color.Black,
@@ -554,6 +577,8 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                     )
                 )
             }
+
+
         }
     }
 }
@@ -636,7 +661,52 @@ fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> U
                 }
             }
 
-            Box(modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)))
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(40.dp)
+                    .background(getExpiryColor(item.expiryDate))
+//                    .background(Color(0xFFA2A2A2))
+            ) {
+                val txt = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> "Soon"
+                    getExpiryColor(item.expiryDate) == ColorExpired -> "Expired"
+                    else -> "Fresh"
+                }
+
+                val ic = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> Icons.Outlined.AccessTime
+                    getExpiryColor(item.expiryDate) == ColorExpired -> Icons.Outlined.WarningAmber
+                    else -> Icons.Outlined.CheckCircle
+                }
+
+                // 🔝 Top-centered icon
+//                Icon(
+//                    ic,
+//                    contentDescription = "Expiry Icon",
+//                    modifier = Modifier
+//                        .align(Alignment.TopCenter)
+//                        .padding(top = 8.dp)
+//                        .size(16.dp),
+//                    tint = Color.Black
+//                )
+
+                // 🎯 Perfectly centered rotated text
+                Text(
+                    text = txt,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .rotate(90f),
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
+
         }
     }
 }
