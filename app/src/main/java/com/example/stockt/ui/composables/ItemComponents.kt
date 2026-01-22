@@ -81,18 +81,16 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                     else -> Icons.Outlined.CheckCircle
                 }
 
-                // 🔝 Top-centered icon
-//                Icon(
-//                    ic,
-//                    contentDescription = "Expiry Icon",
-//                    modifier = Modifier
-//                        .align(Alignment.TopCenter)
-//                        .padding(top = 8.dp)
-//                        .size(16.dp),
-//                    tint = Color.Black
-//                )
+                Icon(
+                    ic,
+                    contentDescription = "Expiry Icon",
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 8.dp)
+                        .size(16.dp),
+                    tint = Color.Black
+                )
 
-                // 🎯 Perfectly centered rotated text
                 Text(
                     text = txt,
                     maxLines = 1,
@@ -164,18 +162,16 @@ fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> U
                     else -> Icons.Outlined.CheckCircle
                 }
 
-                // 🔝 Top-centered icon
-//                Icon(
-//                    ic,
-//                    contentDescription = "Expiry Icon",
-//                    modifier = Modifier
-//                        .align(Alignment.TopCenter)
-//                        .padding(top = 8.dp)
-//                        .size(16.dp),
-//                    tint = Color.Black
-//                )
+                Icon(
+                    ic,
+                    contentDescription = "Expiry Icon",
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 8.dp)
+                        .size(16.dp),
+                    tint = Color.Black
+                )
 
-                // 🎯 Perfectly centered rotated text
                 Text(
                     text = txt,
                     maxLines = 1,

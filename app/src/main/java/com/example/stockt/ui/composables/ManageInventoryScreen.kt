@@ -134,11 +134,12 @@ fun ManageInventoryScreen(
                             onDeleteShelf(shelfToDelete!!)
                             shelfToDelete = null
                         },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
                     ) { Text("Delete") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { shelfToDelete = null }) { Text("Cancel") }
+                    TextButton(onClick = { shelfToDelete = null },
+                        ) { Text("Cancel") }
                 }
             )
         }
