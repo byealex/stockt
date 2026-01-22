@@ -1,5 +1,7 @@
 package com.example.stockt.ui.composables
 
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -19,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.stockt.ui.convertMillisToDate
@@ -43,11 +46,26 @@ fun ItemEntryDialog(
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // Camera Logic
+    // 1. CAMERA STATE
     var currentPhotoFile by remember { mutableStateOf<File?>(null) }
+
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && currentPhotoFile != null) {
             viewModel.selectedImagePath = currentPhotoFile!!.absolutePath
+        }
+    }
+
+    val launchCamera = {
+        val (file, uri) = createImageFile(context)
+        currentPhotoFile = file
+        cameraLauncher.launch(uri)
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            launchCamera()
         }
     }
 
@@ -75,7 +93,6 @@ fun ItemEntryDialog(
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text("Add Item", style = MaterialTheme.typography.headlineSmall)
 
-                    // Camera / Image Preview
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -86,10 +103,14 @@ fun ItemEntryDialog(
                                 } else Modifier
                             )
                             .clip(RoundedCornerShape(12.dp))
+                            // 👇 UPDATED CLICK LISTENER
                             .clickable {
-                                val (file, uri) = createImageFile(context)
-                                currentPhotoFile = file
-                                cameraLauncher.launch(uri)
+                                val permission = Manifest.permission.CAMERA
+                                if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                                    launchCamera()
+                                } else {
+                                    cameraPermissionLauncher.launch(permission)
+                                }
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -108,6 +129,7 @@ fun ItemEntryDialog(
                         }
                     }
 
+
                     if (viewModel.scanError != null) {
                         Text(text = viewModel.scanError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
@@ -119,7 +141,6 @@ fun ItemEntryDialog(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    // Shelf Selection
                     if (availableShelves.isEmpty()) {
                         Button(
                             onClick = { viewModel.createDefaultShelf() },
