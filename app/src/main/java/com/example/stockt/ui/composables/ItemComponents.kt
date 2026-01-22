@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
@@ -78,7 +79,7 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                 val ic = when {
                     getExpiryColor(item.expiryDate) == ColorWarning -> Icons.Outlined.AccessTime
                     getExpiryColor(item.expiryDate) == ColorExpired -> Icons.Outlined.WarningAmber
-                    else -> Icons.Outlined.CheckCircle
+                    else -> Icons.Outlined.Check
                 }
 
                 Icon(
@@ -159,7 +160,7 @@ fun ItemDetailRow(item: Item, userPrefs: UserPreferences?, onDelete: (Item) -> U
                 val ic = when {
                     getExpiryColor(item.expiryDate) == ColorWarning -> Icons.Outlined.AccessTime
                     getExpiryColor(item.expiryDate) == ColorExpired -> Icons.Outlined.WarningAmber
-                    else -> Icons.Outlined.CheckCircle
+                    else -> Icons.Outlined.Check
                 }
 
                 Icon(
