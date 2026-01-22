@@ -23,7 +23,14 @@ class InventoryViewModel(private val repository: StocktRepository) : ViewModel()
     // 1. UI STATE
     val uiState: StateFlow<InventoryUiState> =
         repository.getShelvesForStorageUnit(1)
-            .map { InventoryUiState(it) }
+            .map { shelves ->
+                val sortedShelves = shelves.map { shelf ->
+                    shelf.copy(
+                        items = shelf.items.sortedBy { it.expiryDate } // Sorts: Soonest -> Latest
+                    )
+                }
+                InventoryUiState(sortedShelves)
+            }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
