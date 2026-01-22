@@ -59,6 +59,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 
 // --- COLORS ---
@@ -281,7 +283,7 @@ fun InventoryScreen(
                 actions = {
                     if (selectedShelfId == null) {
                         IconButton(onClick = { showFilterScreen = true }) {
-                            Icon(Icons.Default.List, contentDescription = "Overview & Filter")
+                            Icon(Icons.Default.FilterList, contentDescription = "Overview & Filter")
                         }
                     }
                     IconButton(onClick = { showProfile = true }) {
@@ -328,8 +330,8 @@ fun InventoryScreen(
                                     .clickable {
                                         showManageInventories = true
                                         isFabExpanded = false
-                                    }
-                                    .padding(vertical = 4.dp), // Add touch padding
+                                    },
+//                                    .padding(vertical = 4.dp), // Add touch padding
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -344,7 +346,11 @@ fun InventoryScreen(
                             }
                         }
 
-                        if (isFabExpanded) Spacer(modifier = Modifier.height(8.dp))
+                        if (isFabExpanded)
+                            HorizontalDivider(
+                                Modifier.width(180.dp).padding(vertical = 16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant)
+
 
                         // 2. SCAN BARCODE ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
@@ -360,8 +366,8 @@ fun InventoryScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onScanClick() }
-                                    .padding(vertical = 4.dp),
+                                    .clickable { onScanClick() },
+//                                    .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -376,7 +382,10 @@ fun InventoryScreen(
                             }
                         }
 
-                        if (isFabExpanded) Spacer(modifier = Modifier.height(8.dp))
+                        if (isFabExpanded)
+                            HorizontalDivider(
+                                Modifier.width(180.dp).padding(vertical = 16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant)
 
                         // 3. ADD ITEM ROW
                         AnimatedVisibility(visible = isFabExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
@@ -387,8 +396,8 @@ fun InventoryScreen(
                                         entryViewModel.resetForm()
                                         showItemDialog = true
                                         isFabExpanded = false
-                                    }
-                                    .padding(vertical = 4.dp),
+                                    },
+//                                    .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -520,7 +529,31 @@ fun ItemTicket(item: Item, userPrefs: UserPreferences?) {
                 }
             }
 
-            Box(modifier = Modifier.fillMaxHeight().width(40.dp).background(color = getExpiryColor(item.expiryDate)))
+            Box(modifier = Modifier
+                .fillMaxHeight()
+                .width(40.dp)
+                .background(color = getExpiryColor(item.expiryDate)),
+
+                contentAlignment = Alignment.Center
+            ) {
+                val txt = when {
+                    getExpiryColor(item.expiryDate) == ColorWarning -> "Soon"
+                    getExpiryColor(item.expiryDate) == ColorExpired -> "Expired"
+                    else -> "Fresh"
+                }
+
+                Text(
+                    text = txt,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.rotate(90f),
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
         }
     }
 }
@@ -647,7 +680,8 @@ fun ItemEntryDialog(
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E293B)
+            containerColor = Color(0xFF1E293B),
+            contentColor = Color.White
         )) {
 
             // 1. LOADING STATE (If fetching from API)
