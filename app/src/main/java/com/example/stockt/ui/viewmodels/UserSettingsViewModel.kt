@@ -1,4 +1,4 @@
-package com.example.stockt.ui
+package com.example.stockt.ui.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

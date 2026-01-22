@@ -1,7 +1,6 @@
-package com.example.stockt.ui
+package com.example.stockt.ui.viewmodels
 
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.stockt.StocktApplication

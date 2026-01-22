@@ -1,4 +1,4 @@
-package com.example.stockt.ui
+package com.example.stockt.ui.composables
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.example.stockt.data.Item
 import com.example.stockt.data.ShelfWithItems
 import com.example.stockt.data.UserPreferences
+import com.example.stockt.ui.ItemDetailRow
+import com.example.stockt.ui.getDaysRemaining
 
 // Define our Filter Options
 enum class FilterOption(val label: String) {

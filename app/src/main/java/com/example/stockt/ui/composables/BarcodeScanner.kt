@@ -1,4 +1,4 @@
-package com.example.stockt.ui
+package com.example.stockt.ui.composables
 
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis

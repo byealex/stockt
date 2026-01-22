@@ -1,5 +1,6 @@
-package com.example.stockt.ui
+package com.example.stockt.ui.composables
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
-import com.example.stockt.data.Item
 import com.example.stockt.data.ProductData
 import com.example.stockt.data.SafetyStatus
 import com.example.stockt.data.SafetyUtils
@@ -120,7 +120,7 @@ fun ProductPreviewDialog(
 fun DietaryChip(text: String, color: Color) {
     Surface(
         color = color.copy(alpha = 0.15f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color),
+        border = BorderStroke(1.dp, color),
         shape = RoundedCornerShape(50),
     ) {
         Text(

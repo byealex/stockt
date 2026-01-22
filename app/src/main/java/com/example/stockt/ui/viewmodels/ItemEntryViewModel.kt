@@ -1,4 +1,4 @@
-package com.example.stockt.ui
+package com.example.stockt.ui.viewmodels
 
 import android.content.Context
 import androidx.compose.runtime.getValue
