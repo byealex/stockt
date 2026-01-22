@@ -38,6 +38,10 @@ import com.example.stockt.ui.composables.* // Import your new folder
 import com.example.stockt.ui.viewmodels.*
 import java.io.File
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -373,8 +377,13 @@ fun createImageFile(context: Context): Pair<File, Uri> {
 }
 
 fun getDaysRemaining(expiryDate: Long): Long {
-    val diff = expiryDate - System.currentTimeMillis()
-    return TimeUnit.MILLISECONDS.toDays(diff)
+    val today = LocalDate.now()
+
+    val expiry = Instant.ofEpochMilli(expiryDate)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+
+    return ChronoUnit.DAYS.between(today, expiry)
 }
 
 fun getExpiryColor(expiryDate: Long): Color {
