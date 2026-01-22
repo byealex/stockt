@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.example.stockt.data.Item
 import com.example.stockt.data.ShelfWithItems
 import com.example.stockt.data.UserPreferences
-import com.example.stockt.ui.ItemDetailRow
+import com.example.stockt.ui.composables.ItemDetailRow
 import com.example.stockt.ui.getDaysRemaining
 
 // Define our Filter Options
@@ -77,7 +77,7 @@ fun FilterScreen(
                 edgePadding = 16.dp,
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.primary,
-                indicator = { /* Hide indicator for chip style look, or keep default */ },
+                indicator = {},
                 divider = {}
             ) {
                 FilterOption.values().forEach { filter ->
@@ -108,7 +108,6 @@ fun FilterScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(displayedItems) { item ->
-                        // REUSE your existing ItemDetailRow!
                         ItemDetailRow(
                             item = item,
                             userPrefs = userPrefs,

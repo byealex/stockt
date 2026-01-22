@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.stockt.data.Shelf // Ensure correct import for your model
 import com.example.stockt.data.ShelfWithItems
-import com.example.stockt.ui.ShelfEntryDialog
+import com.example.stockt.ui.composables.ShelfEntryDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
