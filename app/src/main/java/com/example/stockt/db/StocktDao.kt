@@ -7,7 +7,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.example.stockt.data.Shelf
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,13 +15,13 @@ interface StocktDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertStorageUnit(storageUnit: StorageUnitEntity): Long
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertShelf(shelfEntity: ShelfEntity): Long
+    suspend fun insertInventory(inventoryEntity: InventoryEntity): Long
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(itemEntity: ItemEntity): Long
 
     @Transaction
-    @Query("SELECT * FROM shelves WHERE storageid = :storageId")
-    fun getShelvesWithItemsForUnit(storageId: Int): Flow<List<ShelfWithItemsRelation>>
+    @Query("SELECT * FROM inventories WHERE storageid = :storageId")
+    fun getInventoriesWithItemsForUnit(storageId: Int): Flow<List<InventoryWithItemsRelation>>
 
     @Query("SELECT * FROM items")
     fun getAllItems(): Flow<List<ItemEntity>>
@@ -31,10 +30,10 @@ interface StocktDao {
     suspend fun deleteItemById(itemId: Int)
 
     @Delete
-    suspend fun deleteShelf(shelfEntity: ShelfEntity)
+    suspend fun deleteInventory(inventoryEntity: InventoryEntity)
 
-    @Query("UPDATE shelves SET name = :newName WHERE id = :shelfId")
-    suspend fun updateShelfName(shelfId: Int, newName: String)
+    @Query("UPDATE inventories SET name = :newName WHERE id = :inventoryId")
+    suspend fun updateInventoryName(inventoryId: Int, newName: String)
     @Update
     suspend fun updateItem(itemEntity: ItemEntity)
 }

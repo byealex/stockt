@@ -1,8 +1,8 @@
 package com.example.stockt.data
 
+import com.example.stockt.db.InventoryEntity
 import com.example.stockt.db.ItemEntity
-import com.example.stockt.db.ShelfEntity
-import com.example.stockt.db.ShelfWithItemsRelation
+import com.example.stockt.db.InventoryWithItemsRelation
 import com.example.stockt.db.StocktDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,15 +19,15 @@ class StocktRepository(private val dao: StocktDao) {
     }
 
     // reading
-    fun getShelvesForStorageUnit(storageUnitId: Int): Flow<List<ShelfWithItems>> {
-        return dao.getShelvesWithItemsForUnit(storageUnitId).map {
+    fun getInventoriesForStorageUnit(storageUnitId: Int): Flow<List<InventoryWithItems>> {
+        return dao.getInventoriesWithItemsForUnit(storageUnitId).map {
             relationList -> relationList.map { it.toDomainModel() }
         }
     }
 
     // writing
-    suspend fun insertShelf(shelf: Shelf): Int {
-        return dao.insertShelf(shelf.toEntity()).toInt()
+    suspend fun insertInventory(inventory: Inventory): Int {
+        return dao.insertInventory(inventory.toEntity()).toInt()
     }
 
     suspend fun insertItem(item: Item) {
@@ -38,23 +38,23 @@ class StocktRepository(private val dao: StocktDao) {
         dao.deleteItemById(itemId)
     }
 
-    suspend fun deleteShelf(shelf: Shelf) {
-        dao.deleteShelf(shelf.toEntity())
+    suspend fun deleteInventory(inventory: Inventory) {
+        dao.deleteInventory(inventory.toEntity())
     }
 
-    suspend fun updateShelfName(id: Int, newName: String) {
-        dao.updateShelfName(id, newName)
+    suspend fun updateInventoryName(id: Int, newName: String) {
+        dao.updateInventoryName(id, newName)
     }
 }
 
 
-private fun ShelfEntity.toDomainModel() = Shelf(
+private fun InventoryEntity.toDomainModel() = Inventory(
     id = this.id,
     name = this.name,
     storageId = this.storageId
 )
 
-private fun Shelf.toEntity() = ShelfEntity(
+private fun Inventory.toEntity() = InventoryEntity(
     id = this.id,
     name = this.name,
     storageId = this.storageId
@@ -66,7 +66,7 @@ private fun ItemEntity.toDomainModel() = Item(
     id = this.id,
     name = this.name,
     expiryDate = this.expiryDate,
-    shelfId = this.shelfId,
+    inventoryId = this.inventoryId,
     imagePath = this.imagePath,
     analysisTags = this.analysisTags,
     allergenTags = this.allergenTags
@@ -76,13 +76,13 @@ private fun Item.toEntity() = ItemEntity(
     id = this.id,
     name = this.name,
     expiryDate = this.expiryDate,
-    shelfId = this.shelfId,
+    inventoryId = this.inventoryId,
     imagePath = this.imagePath,
     analysisTags = this.analysisTags,
     allergenTags = this.allergenTags
 )
 
-private fun ShelfWithItemsRelation.toDomainModel() = ShelfWithItems(
-    shelf = this.shelfEntity.toDomainModel(),
+private fun InventoryWithItemsRelation.toDomainModel() = InventoryWithItems(
+    inventory = this.inventoryEntity.toDomainModel(),
     items = this.itemEntities.map { it.toDomainModel() }
 )

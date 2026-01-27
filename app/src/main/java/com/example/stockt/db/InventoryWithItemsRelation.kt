@@ -3,12 +3,12 @@ package com.example.stockt.db
 import androidx.room.Embedded
 import androidx.room.Relation
 
-data class ShelfWithItemsRelation(
-    @Embedded val shelfEntity: ShelfEntity,
+data class InventoryWithItemsRelation(
+    @Embedded val inventoryEntity: InventoryEntity,
 
     @Relation(
         parentColumn = "id",
-        entityColumn = "shelfId"
+        entityColumn = "inventoryId"
     )
     val itemEntities: List<ItemEntity>
 )

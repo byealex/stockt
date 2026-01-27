@@ -43,7 +43,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 // --- SHARED CONSTANTS ---
@@ -64,13 +63,13 @@ fun StocktApp(
     } else if (userPrefs!!.isFirstRun) {
         ProfileScreen(isFirstTime = true, onFinished = { })
     } else {
-        InventoryScreen()
+        MainScreen()
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InventoryScreen(
+fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: InventoryViewModel = viewModel(factory = AppViewModelProvider.Factory),
     entryViewModel: ItemEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
@@ -89,6 +88,15 @@ fun InventoryScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) showScanner = true
+    }
+
+    val onScanClick = {
+        val permission = Manifest.permission.CAMERA
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+            showScanner = true
+        } else {
+            cameraPermissionLauncher.launch(permission)
+        }
     }
 
     // 2. DIALOGS
@@ -134,13 +142,15 @@ fun InventoryScreen(
     if (showItemDialog) {
         ItemEntryDialog(
             onDismissRequest = { showItemDialog = false },
+            viewModel = entryViewModel,
             onDelete = {
                 val itemId = entryViewModel.currentItemId
                 if (itemId != null) {
-                    val item = uiState.shelves.flatMap { it.items }.find { it.id == itemId }
+                    val item = uiState.inventories.flatMap { it.items }.find { it.id == itemId }
                     itemToDelete = item
                 }
-            }
+            },
+            onScanClicked = { onScanClick() }
         )
     }
 
@@ -179,18 +189,18 @@ fun InventoryScreen(
         viewModel.createDefaultCategoriesIfNeeded()
     }
 
-    var selectedShelfId by remember { mutableStateOf<Int?>(null) }
+    var selectedInventoryId by remember { mutableStateOf<Int?>(null) }
     var showManageInventories by remember { mutableStateOf(false) }
     var showFilterScreen by remember { mutableStateOf(false) }
     var showProfile by remember { mutableStateOf(false) }
 
-    val selectedShelf = uiState.shelves.find { it.shelf.id == selectedShelfId }
+    val selectedInventory = uiState.inventories.find { it.inventory.id == selectedInventoryId }
     var isFabExpanded by remember { mutableStateOf(false) }
     val rotationAngle by animateFloatAsState(if (isFabExpanded) 45f else 0f, label = "fab")
 
-    BackHandler(enabled = selectedShelfId != null || showManageInventories || showProfile || showFilterScreen) {
+    BackHandler(enabled = selectedInventoryId != null || showManageInventories || showProfile || showFilterScreen) {
         when {
-            selectedShelfId != null -> selectedShelfId = null
+            selectedInventoryId != null -> selectedInventoryId = null
             showManageInventories -> showManageInventories = false
             showFilterScreen -> showFilterScreen = false
             showProfile -> showProfile = false
@@ -205,17 +215,17 @@ fun InventoryScreen(
 
     if (showManageInventories) {
         ManageInventoryScreen(
-            shelves = uiState.shelves,
+            inventories = uiState.inventories,
             onBack = { showManageInventories = false },
-            onDeleteShelf = { shelf -> viewModel.deleteShelf(shelf) },
-            onSaveShelf = { id, name -> viewModel.saveShelf(id, name) }
+            onDeleteInventory = { inventory -> viewModel.deleteInventory(inventory) },
+            onSaveInventory = { id, name -> viewModel.saveInventory(id, name) }
         )
         return
     }
 
     if (showFilterScreen) {
         FilterScreen(
-            shelves = uiState.shelves,
+            inventories = uiState.inventories,
             userPrefs = userPrefs,
             onBack = { showFilterScreen = false },
             onEdit = { item ->
@@ -231,10 +241,10 @@ fun InventoryScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(selectedShelf?.shelf?.name ?: "My Inventory") },
+                title = { Text(selectedInventory?.inventory?.name ?: "My Inventory") },
                 navigationIcon = {
-                    if (selectedShelfId != null) {
-                        IconButton(onClick = { selectedShelfId = null }) {
+                    if (selectedInventoryId != null) {
+                        IconButton(onClick = { selectedInventoryId = null }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
                     } else {
@@ -244,7 +254,7 @@ fun InventoryScreen(
                     }
                 },
                 actions = {
-                    if (selectedShelfId == null) {
+                    if (selectedInventoryId == null) {
                         IconButton(onClick = { showFilterScreen = true }) {
                             Icon(Icons.Default.FilterList, contentDescription = "Filter")
                         }
@@ -256,11 +266,12 @@ fun InventoryScreen(
             )
         },
         floatingActionButton = {
-            if (selectedShelfId != null) {
+            if (selectedInventoryId != null) {
                 FloatingActionButton(
                     onClick = {
                         entryViewModel.resetForm()
-                        entryViewModel.selectedShelfId = selectedShelfId
+                            entryViewModel.selectedInventoryId = selectedInventoryId
+
                         showItemDialog = true
                     }
                 ) {
@@ -340,23 +351,24 @@ fun InventoryScreen(
                 }
             }
         }
+
     ) { innerPadding ->
         Column(modifier = modifier.padding(innerPadding).padding(16.dp)) {
-            if (selectedShelf == null) {
-                if (uiState.shelves.isEmpty()) {
+            if (selectedInventory == null) {
+                if (uiState.inventories.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No Shelves! Add one to start.", style = MaterialTheme.typography.headlineSmall)
+                        Text("No Inventories! Add one to start.", style = MaterialTheme.typography.headlineSmall)
                     }
                 } else {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(44.dp)) {
-                        items(uiState.shelves) { shelf ->
-                            ShelfDashboardCard(shelf = shelf, userPrefs = userPrefs, onClick = { selectedShelfId = shelf.shelf.id })
+                        items(uiState.inventories) { inventory ->
+                            InventoryDashboardCard(inventory = inventory, userPrefs = userPrefs, onClick = { selectedInventoryId = inventory.inventory.id })
                         }
                     }
                 }
             } else {
-                ShelfDetailView(
-                    shelf = selectedShelf!!,
+                InventoryDetailView(
+                    inventory = selectedInventory!!,
                     userPrefs = userPrefs,
                     onDelete = { item -> itemToDelete = item },
                     onEdit = { item -> entryViewModel.startEditing(item); showItemDialog = true }

@@ -13,9 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.stockt.data.Item
-import com.example.stockt.data.ShelfWithItems
+import com.example.stockt.data.InventoryWithItems
 import com.example.stockt.data.UserPreferences
-import com.example.stockt.ui.composables.ItemDetailRow
 import com.example.stockt.ui.getDaysRemaining
 
 // Filter Options
@@ -29,15 +28,15 @@ enum class FilterOption(val label: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterScreen(
-    shelves: List<ShelfWithItems>,
+    inventories: List<InventoryWithItems>,
     userPrefs: UserPreferences?,
     onBack: () -> Unit,
     onEdit: (Item) -> Unit,
     onDelete: (Item) -> Unit
 ) {
     // Get all items in a big list
-    val allItems = remember(shelves) {
-        shelves.flatMap { it.items }
+    val allItems = remember(inventories) {
+        inventories.flatMap { it.items }
             .sortedBy { it.expiryDate } // Always sort by date (soonest first)
     }
 

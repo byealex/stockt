@@ -19,11 +19,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.stockt.R
 import com.example.stockt.ui.convertMillisToDate
 import com.example.stockt.ui.createImageFile
 import com.example.stockt.ui.util.dashedBorder
@@ -36,13 +38,14 @@ import java.io.File
 fun ItemEntryDialog(
     onDismissRequest: () -> Unit,
     viewModel: ItemEntryViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    onDelete: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null,
+    onScanClicked: () -> Unit
 ) {
     val context = LocalContext.current
-    val availableShelves by viewModel.availableShelves.collectAsState()
+    val availableInventories by viewModel.availableInventories.collectAsState()
 
-    var isShelfDropdownExpanded by remember { mutableStateOf(false) }
-    var selectedShelfName by remember { mutableStateOf("Select a Shelf") }
+    var isInventoryDropdownExpanded by remember { mutableStateOf(false) }
+    var selectedInventoryName by remember { mutableStateOf("Select a Inventory") }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
@@ -69,10 +72,10 @@ fun ItemEntryDialog(
         }
     }
 
-    LaunchedEffect(viewModel.selectedShelfId, availableShelves) {
-        if (viewModel.selectedShelfId != null) {
-            val shelf = availableShelves.find { it.shelf.id == viewModel.selectedShelfId }
-            if (shelf != null) selectedShelfName = shelf.shelf.name
+    LaunchedEffect(viewModel.selectedInventoryId, availableInventories) {
+        if (viewModel.selectedInventoryId != null) {
+            val inventory = availableInventories.find { it.inventory.id == viewModel.selectedInventoryId }
+            if (inventory != null) selectedInventoryName = inventory.inventory.name
         }
     }
 
@@ -91,7 +94,15 @@ fun ItemEntryDialog(
                 }
             } else {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Add Item", style = MaterialTheme.typography.headlineSmall)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Add Item", style = MaterialTheme.typography.headlineSmall)
+
+                        SmallFloatingActionButton(onClick = { onScanClicked() }) { Icon(painter = painterResource(id = R.drawable.ic_barcode_scanner), contentDescription = "Scan") }
+                    }
 
                     Box(
                         modifier = Modifier
@@ -140,32 +151,32 @@ fun ItemEntryDialog(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    if (availableShelves.isEmpty()) {
+                    if (availableInventories.isEmpty()) {
                         Button(
-                            onClick = { viewModel.createDefaultShelf() },
+                            onClick = { viewModel.createDefaultInventory() },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                        ) { Text("Create Default Shelf") }
+                        ) { Text("Create Default Inventory") }
                     } else {
                         Box(modifier = Modifier.fillMaxWidth()) {
                             OutlinedTextField(
-                                value = selectedShelfName,
+                                value = selectedInventoryName,
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Shelf") },
+                                label = { Text("Inventory") },
                                 trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
                                 modifier = Modifier.fillMaxWidth()
                             )
-                            Box(modifier = Modifier.matchParentSize().clickable { isShelfDropdownExpanded = true })
+                            Box(modifier = Modifier.matchParentSize().clickable { isInventoryDropdownExpanded = true })
 
-                            DropdownMenu(expanded = isShelfDropdownExpanded, onDismissRequest = { isShelfDropdownExpanded = false }) {
-                                availableShelves.forEach { shelf ->
+                            DropdownMenu(expanded = isInventoryDropdownExpanded, onDismissRequest = { isInventoryDropdownExpanded = false }) {
+                                availableInventories.forEach { inventory ->
                                     DropdownMenuItem(
-                                        text = { Text(shelf.shelf.name) },
+                                        text = { Text(inventory.inventory.name) },
                                         onClick = {
-                                            viewModel.selectedShelfId = shelf.shelf.id
-                                            selectedShelfName = shelf.shelf.name
-                                            isShelfDropdownExpanded = false
+                                            viewModel.selectedInventoryId = inventory.inventory.id
+                                            selectedInventoryName = inventory.inventory.name
+                                            isInventoryDropdownExpanded = false
                                         }
                                     )
                                 }
@@ -189,7 +200,7 @@ fun ItemEntryDialog(
                         Row {
                             TextButton(onClick = onDismissRequest) { Text("Cancel") }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = { viewModel.saveItem(); onDismissRequest() }, enabled = viewModel.itemName.isNotBlank() && viewModel.selectedShelfId != null) { Text("Save") }
+                            Button(onClick = { viewModel.saveItem(); onDismissRequest() }, enabled = viewModel.itemName.isNotBlank() && viewModel.selectedInventoryId != null) { Text("Save") }
                         }
                     }
                 }

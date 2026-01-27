@@ -10,7 +10,7 @@ import com.example.stockt.data.OpenFoodFactsApi
 import com.example.stockt.data.ProductData
 import com.example.stockt.data.StocktRepository
 import com.example.stockt.data.Item
-import com.example.stockt.data.ShelfWithItems
+import com.example.stockt.data.InventoryWithItems
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,8 +23,8 @@ import java.net.URL
 class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel() {
 
     // Get the Dropdowns for the available inventories
-    val availableShelves: StateFlow<List<ShelfWithItems>> =
-        repository.getShelvesForStorageUnit(1)
+    val availableInventories: StateFlow<List<InventoryWithItems>> =
+        repository.getInventoriesForStorageUnit(1)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
@@ -34,7 +34,7 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
     var currentItemId by mutableStateOf<Int?>(null)
 
     var itemName by mutableStateOf("")
-    var selectedShelfId by mutableStateOf<Int?>(null)
+    var selectedInventoryId by mutableStateOf<Int?>(null)
     var selectedExpiryDate by mutableStateOf<Long?>(null)
     var selectedImagePath by mutableStateOf<String?>(null)
 
@@ -49,7 +49,7 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
         currentItemId = item.id
 
         itemName = item.name
-        selectedShelfId = item.shelfId
+        selectedInventoryId = item.inventoryId
         selectedExpiryDate = item.expiryDate
         selectedImagePath = item.imagePath
 
@@ -70,12 +70,12 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
     }
 
     fun saveItem() {
-        if (itemName.isNotBlank() && selectedShelfId != null) {
+        if (itemName.isNotBlank() && selectedInventoryId != null) {
             val itemToSave = Item(
                 id = currentItemId ?: 0,
 
                 name = itemName,
-                shelfId = selectedShelfId!!,
+                inventoryId = selectedInventoryId!!,
                 expiryDate = selectedExpiryDate ?: System.currentTimeMillis(),
                 imagePath = selectedImagePath,
                 analysisTags = scannedAnalysisTags,
@@ -114,9 +114,9 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
     fun acceptScannedProduct(context: Context) {
         val product = scannedProductPreview ?: return
 
-        val currentShelf = selectedShelfId
+        val currentInventory = selectedInventoryId
         resetForm()
-        selectedShelfId = currentShelf
+        selectedInventoryId = currentInventory
 
         itemName = product.product_name ?: "Unknown Product"
         scannedAnalysisTags = product.ingredients_analysis_tags?.joinToString(",")
@@ -163,8 +163,8 @@ class ItemEntryViewModel(private val repository: StocktRepository) : ViewModel()
         }
     }
 
-    fun createDefaultShelf() {
-        // Logic to create a shelf if none exist
+    fun createDefaultInventory() {
+        // Logic to create a inventory if none exist
         viewModelScope.launch {
             repository.createDefaultInventory()
         }

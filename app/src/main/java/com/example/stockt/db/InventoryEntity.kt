@@ -5,7 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "shelves",
+    tableName = "inventories",
     foreignKeys = [
         ForeignKey(
             entity = StorageUnitEntity::class,
@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
         )
     ]
 )
-data class ShelfEntity(
+data class InventoryEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,

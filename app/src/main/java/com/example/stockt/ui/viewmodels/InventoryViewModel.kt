@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stockt.data.StocktRepository
 import com.example.stockt.data.Item
-import com.example.stockt.data.Shelf
-import com.example.stockt.data.ShelfWithItems
+import com.example.stockt.data.Inventory
+import com.example.stockt.data.InventoryWithItems
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -15,21 +15,21 @@ import kotlinx.coroutines.flow.first
 
 // Define the UI State wrapper
 data class InventoryUiState(
-    val shelves: List<ShelfWithItems> = emptyList()
+    val inventories: List<InventoryWithItems> = emptyList()
 )
 
 class InventoryViewModel(private val repository: StocktRepository) : ViewModel() {
 
     // 1. UI STATE
     val uiState: StateFlow<InventoryUiState> =
-        repository.getShelvesForStorageUnit(1)
-            .map { shelves ->
-                val sortedShelves = shelves.map { shelf ->
-                    shelf.copy(
-                        items = shelf.items.sortedBy { it.expiryDate } // Sorts: Soonest -> Latest
+        repository.getInventoriesForStorageUnit(1)
+            .map { inventories ->
+                val sortedInventories = inventories.map { inventory ->
+                    inventory.copy(
+                        items = inventory.items.sortedBy { it.expiryDate } // Sorts: Soonest -> Latest
                     )
                 }
-                InventoryUiState(sortedShelves)
+                InventoryUiState(sortedInventories)
             }
             .stateIn(
                 scope = viewModelScope,
@@ -40,27 +40,27 @@ class InventoryViewModel(private val repository: StocktRepository) : ViewModel()
     // 2. INITIALIZATION
     fun createDefaultCategoriesIfNeeded() {
         viewModelScope.launch {
-            val currentList = repository.getShelvesForStorageUnit(1).first()
+            val currentList = repository.getInventoriesForStorageUnit(1).first()
 
             if (currentList.isEmpty()) {
                 repository.createDefaultInventory()
-                repository.insertShelf(Shelf(name = "Pantry", storageId = 1))
-                repository.insertShelf(Shelf(name = "Fridge", storageId = 1))
-                repository.insertShelf(Shelf(name = "Basement", storageId = 1))
+                repository.insertInventory(Inventory(name = "Pantry", storageId = 1))
+                repository.insertInventory(Inventory(name = "Fridge", storageId = 1))
+                repository.insertInventory(Inventory(name = "Basement", storageId = 1))
             }
         }
     }
 
     // 3. SAVE LOCATION
-    fun saveShelf(id: Int, name: String) {
+    fun saveInventory(id: Int, name: String) {
         if (name.isBlank()) return
 
         viewModelScope.launch {
             if (id == 0) {
-                val shelf = Shelf(name = name, storageId = 1)
-                repository.insertShelf(shelf)
+                val inventory = Inventory(name = name, storageId = 1)
+                repository.insertInventory(inventory)
             } else {
-                repository.updateShelfName(id, name)
+                repository.updateInventoryName(id, name)
             }
         }
     }
@@ -72,10 +72,10 @@ class InventoryViewModel(private val repository: StocktRepository) : ViewModel()
         }
     }
 
-    // 5. DELETE SHELF
-    fun deleteShelf(shelf: Shelf) {
+    // 5. DELETE INVENTORY
+    fun deleteInventory(inventory: Inventory) {
         viewModelScope.launch {
-            repository.deleteShelf(shelf)
+            repository.deleteInventory(inventory)
         }
     }
 }

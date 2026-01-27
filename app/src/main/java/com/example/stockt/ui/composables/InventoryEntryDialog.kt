@@ -10,13 +10,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun ShelfEntryDialog(
+fun InventoryEntryDialog(
     initialName: String = "",
     isEditing: Boolean = false,
     onDismissRequest: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var shelfName by remember { mutableStateOf(initialName) }
+    var inventoryName by remember { mutableStateOf(initialName) }
 
     Dialog(onDismissRequest = onDismissRequest) {
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
@@ -29,14 +29,14 @@ fun ShelfEntryDialog(
                 )
 
                 OutlinedTextField(
-                    value = shelfName,
-                    onValueChange = { shelfName = it },
+                    value = inventoryName,
+                    onValueChange = { inventoryName = it },
                     label = { Text("Name (e.g., Garage, Office)") }
                 )
 
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                     TextButton(onClick = onDismissRequest) { Text("Cancel") }
-                    Button(onClick = { onConfirm(shelfName) }, enabled = shelfName.isNotBlank()) {
+                    Button(onClick = { onConfirm(inventoryName) }, enabled = inventoryName.isNotBlank()) {
                         Text(if (isEditing) "Save" else "Add")
                     }
                 }

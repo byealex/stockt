@@ -8,9 +8,9 @@ import androidx.room.PrimaryKey
     tableName = "items",
     foreignKeys = [
         ForeignKey(
-            entity = ShelfEntity::class,
+            entity = InventoryEntity::class,
             parentColumns = ["id"],
-            childColumns = ["shelfId"],
+            childColumns = ["inventoryId"],
             onDelete = ForeignKey.CASCADE
         )
     ]
@@ -20,7 +20,7 @@ data class ItemEntity(
     val id: Int = 0,
     val name: String,
     val expiryDate: Long,
-    val shelfId: Int,
+    val inventoryId: Int,
     val imagePath: String? = null,
     val analysisTags: String? = null,
     val allergenTags: String? = null,

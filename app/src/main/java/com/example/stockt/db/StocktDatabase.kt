@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [ItemEntity::class, ShelfEntity::class, StorageUnitEntity::class],
+    entities = [ItemEntity::class, InventoryEntity::class, StorageUnitEntity::class],
     version = 1
 )
 

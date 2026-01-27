@@ -15,21 +15,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.stockt.data.Shelf // Ensure correct import for your model
-import com.example.stockt.data.ShelfWithItems
-import com.example.stockt.ui.composables.ShelfEntryDialog
+import com.example.stockt.data.Inventory // Ensure correct import for your model
+import com.example.stockt.data.InventoryWithItems
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageInventoryScreen(
-    shelves: List<ShelfWithItems>,
+    inventories: List<InventoryWithItems>,
     onBack: () -> Unit,
-    onDeleteShelf: (Shelf) -> Unit,
-    onSaveShelf: (Int, String) -> Unit
+    onDeleteInventory: (Inventory) -> Unit,
+    onSaveInventory: (Int, String) -> Unit
 ) {
     var showEntryDialog by remember { mutableStateOf(false) }
-    var shelfToEdit by remember { mutableStateOf<Shelf?>(null) }
-    var shelfToDelete by remember { mutableStateOf<Shelf?>(null) }
+    var inventoryToEdit by remember { mutableStateOf<Inventory?>(null) }
+    var inventoryToDelete by remember { mutableStateOf<Inventory?>(null) }
 
     Scaffold(
         topBar = {
@@ -44,14 +43,14 @@ fun ManageInventoryScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                shelfToEdit = null
+                inventoryToEdit = null
                 showEntryDialog = true
             }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Location")
             }
         }
     ) { innerPadding ->
-        if (shelves.isEmpty()) {
+        if (inventories.isEmpty()) {
             Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("No locations found.", color = Color.Gray)
             }
@@ -60,7 +59,7 @@ fun ManageInventoryScreen(
                 modifier = Modifier.padding(innerPadding).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                items(shelves) { shelfWithItems ->
+                items(inventories) { inventoryWithItems ->
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                     ) {
@@ -75,12 +74,12 @@ fun ManageInventoryScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
-                                    text = shelfWithItems.shelf.name,
+                                    text = inventoryWithItems.inventory.name,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = shelfWithItems.items.size.toString(),
+                                    text = inventoryWithItems.items.size.toString(),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color(0xFF6A798C)
@@ -89,7 +88,7 @@ fun ManageInventoryScreen(
 
                             // Edit Button
                             IconButton(onClick = {
-                                shelfToEdit = shelfWithItems.shelf
+                                inventoryToEdit = inventoryWithItems.inventory
                                 showEntryDialog = true
                             }) {
                                 Icon(
@@ -100,7 +99,7 @@ fun ManageInventoryScreen(
                             }
 
                             // Delete Button
-                            IconButton(onClick = { shelfToDelete = shelfWithItems.shelf }) {
+                            IconButton(onClick = { inventoryToDelete = inventoryWithItems.inventory }) {
                                 Icon(Icons.Outlined.Delete, "Delete", tint = Color.Red)
                             }
                         }
@@ -111,34 +110,34 @@ fun ManageInventoryScreen(
         }
 
         if (showEntryDialog) {
-            ShelfEntryDialog(
-                initialName = shelfToEdit?.name ?: "",
-                isEditing = shelfToEdit != null,
+            InventoryEntryDialog(
+                initialName = inventoryToEdit?.name ?: "",
+                isEditing = inventoryToEdit != null,
                 onDismissRequest = { showEntryDialog = false },
                 onConfirm = { newName ->
-                    val id = shelfToEdit?.id ?: 0
-                    onSaveShelf(id, newName)
+                    val id = inventoryToEdit?.id ?: 0
+                    onSaveInventory(id, newName)
                     showEntryDialog = false
                 }
             )
         }
 
-        if (shelfToDelete != null) {
+        if (inventoryToDelete != null) {
             AlertDialog(
-                onDismissRequest = { shelfToDelete = null },
+                onDismissRequest = { inventoryToDelete = null },
                 title = { Text("Delete Inventory?") },
-                text = { Text("Are you sure you want to delete '${shelfToDelete?.name}'? All items inside will be lost.") },
+                text = { Text("Are you sure you want to delete '${inventoryToDelete?.name}'? All items inside will be lost.") },
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            onDeleteShelf(shelfToDelete!!)
-                            shelfToDelete = null
+                            onDeleteInventory(inventoryToDelete!!)
+                            inventoryToDelete = null
                         },
                         colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
                     ) { Text("Delete") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { shelfToDelete = null },
+                    TextButton(onClick = { inventoryToDelete = null },
                         ) { Text("Cancel") }
                 }
             )
