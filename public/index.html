@@ -32,10 +32,10 @@
 
         <section id="development">
             <h2>Documentation of App Development</h2>
-            
+
             <h3>App Concept & Use Case</h3>
             <p>As already mentioned in the description this app is an inventory management system for food items. You are able to take pictures of the food items and select the expiry dates to never forget about expired food again.</p>
-            
+
             <h3>Target User</h3>
             <p>Our main target users are people who like to organize their food items and don't want to waste food again or forget about allergies in certain items.</p>
 
@@ -54,16 +54,111 @@
 
         <section id="usability">
             <h2>Documentation of Usability Test</h2>
-            
+
             <h3>Usability Test Plan</h3>
-            <p><strong>Heuristic Evaluation:</strong> [Insert evaluation results over initial prototype]</p>
-            <p><strong>Hypothesis:</strong> [Insert testable questions]</p>
-            <p><strong>Data Collection:</strong> [Insert planned data/dependent variables]</p>
-            <p><strong>Methods:</strong> [Insert tasks, questionnaires, and tools used]</p>
+
+            <h4>Heuristic Evaluation</h4>
+            <table>
+                <thead>
+                <tr>
+                    <th>Problem Description (what and where)</th>
+                    <th>Heuristic #</th>
+                    <th>Severity</th>
+                    <th>Mentioned by</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>When deleting an item or inventory, there is no warning dialog or undo button.</td>
+                    <td>5</td>
+                    <td>2</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td>The FAB actions are only clickable on the icons and not the whole tile.</td>
+                    <td>5</td>
+                    <td>2</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td>In an inventory page, you can’t add more items directly.</td>
+                    <td>7</td>
+                    <td>3</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td>After scanning an item, there is no visual loading indicator.</td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>1</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <h4>Hypothesis</h4>
+            <div class="test-group">
+                <p><strong>H₀:</strong> The app's features (barcode scanning, color-coding, and filtering) do not improve the user's ability to manage inventory and safety efficiently.</p>
+                <p><strong>H₁:</strong> The app's features allow users to accurately determine product safety and expiration status with low perceived effort.</p>
+            </div>
+
+            <h4>Research Questions & Variables</h4>
+            <div class="data-collection-content">
+                <h4>Effectiveness</h4>
+                <div class="test-group">
+                    <span class="test-question">Does barcode scanning help users determine product safety for allergies?</span>
+                    <ul class="variable-list">
+                        <li><strong>DV</strong> Correct consumption decision (Safe / Unsafe / Not sure)</li>
+                        <li><strong>IV</strong> Barcode scan feedback (based on user profile settings)</li>
+                    </ul>
+                </div>
+
+                <h4>Efficiency</h4>
+                <div class="test-group">
+                    <span class="test-question">Does color-coding reduce the effort required to identify expired items?</span>
+                    <ul class="variable-list">
+                        <li><strong>DV</strong> Perceived effort when identifying expired items</li>
+                        <li><strong>IV</strong> Color-coded vs. not color-coded expiry dates</li>
+                    </ul>
+                </div>
+
+                <div class="test-group">
+                    <span class="test-question">Does the filter page reduce the effort to identify items expiring today?</span>
+                    <ul class="variable-list">
+                        <li><strong>DV</strong> Perceived effort when identifying expiring items</li>
+                        <li><strong>IV</strong> Page (Homepage vs. Filter page)</li>
+                    </ul>
+                </div>
+
+                <h4>Satisfaction</h4>
+                <div class="test-group">
+                    <span class="test-question">How easy was it to add an item to an inventory?</span>
+                    <ul class="variable-list">
+                        <li><strong>DV</strong> Perceived ease of adding an item</li>
+                    </ul>
+                </div>
+
+                <div class="test-group">
+                    <span class="test-question">How easy was it to edit an item in an inventory?</span>
+                    <ul class="variable-list">
+                        <li><strong>DV</strong> Perceived ease of editing an item</li>
+                    </ul>
+                </div>
+
+                <div class="test-group">
+                    <span class="test-question">How easy was it to create a new inventory?</span>
+                    <ul class="variable-list">
+                        <li><strong>DV</strong> Perceived ease of inventory creation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h4>Methods</h4>
+            <p>SEQ, SUS, A/B Test</p>
+            <p>Tool: MS Forms</p>
 
             <h3>User Test Results</h3>
             <p><strong>Participants:</strong> [Number of subjects and demographics]</p>
-            
+
             <h4>Quantitative Evaluation</h4>
             <table>
                 <thead>
@@ -86,32 +181,61 @@
 
             <h4>Qualitative Feedback</h4>
             <blockquote>
-                "[Insert relevant feedback or quote from user test here]"
+                "Oh I just didn't read" (when trying to open barcode scanner)
+            </blockquote>
+            <blockquote>
+                "I thought these color stripes mean it's save for me to consume them"
+            </blockquote>
+            <blockquote>
+                "I was confused why the badge 'said' safe when it's already expired"
             </blockquote>
 
             <h3>Iterative Updates</h3>
-            <p>[Mention updates made to the app based on feedback]</p>
+            <p>The Feedback we received was highly valuable as it highlighted key issues of our app we hadn't initially thought of. The main issues we found were the color-coded stripes for the expiry dates of the items and navigation problems regarding the barcode scanner.</p>
+            <p>For the color-coded stripes we made it more accessible and less ambiguous by adding an icon and text label to it.</p>
+            <p>For the barcode scanner, we added an additional button in the custom item entry dialog.</p>
         </section>
 
         <hr>
 
         <section id="reflection">
             <h2>Final Reflection</h2>
-            
+
             <div class="reflection-box">
                 <h4>Alexandre Erzadeoglu</h4>
-                <p><strong>Contribution:</strong> [Describe roles]</p>
-                <p><strong>Challenges & Growth:</strong> [Insert reflection]</p>
+                <p><strong>Contribution:</strong> App (re)design & frontend, User research</p>
+                <p><strong>Challenges & Growth:</strong> Implementing the UI of the app wasn't much of a struggle. Main problems were UX related which we identified during user testing. Overall, the experience of this CCL was smooth as I had a teammate who took care of other coding problems so I could focus more on the frontend part of the app.</p>
             </div>
 
             <div class="reflection-box">
                 <h4>Vinh Ho</h4>
                 <p><strong>Contribution:</strong> Code, Base UI, User research</p>
-                <p><strong>Challenges & Growth:</strong> The making of the app wasn't too hard, and the progress was mostly smooth, with just some minor bugs & permission problems that sometimes weren't noticed at the beginning.</p>
+                <p><strong>Challenges & Growth:</strong> The making of the app wasn't too hard, and the progress was mostly smooth, with just some minor bugs & permission problems that sometimes weren't noticed in the beginning.</p>
             </div>
 
             <h3>Concept Meeting & Future Improvements</h3>
-            <p>[How the final app meets the initial concept and what could be further improved]</p>
+
+            <h4>Concept Meeting</h4>
+            <p>
+                The final implementation successfully achieved the core <strong>MVP</strong> objectives. The app effectively bridges the gap between simple inventory tracking and user safety by integrating barcode scanning with personalized dietary profiles. While the initial concept focused on basic management, the current iteration provides a solid foundation for proactive food waste prevention and allergy safety.
+            </p>
+
+            <h4>Future Improvements</h4>
+            <p>To elevate the user experience from a functional tool to a polished product, we have identified a few key areas for growth:</p>
+            <ul class="future-list">
+                <li>
+                    <p><strong>Enhanced Onboarding:</strong></p>
+                    <p>Implementing a dedicated info screen to guide users through the initial setup of dietary preferences and inventory creation.</p>
+                </li>
+                <li>
+                    <p><strong>Additional Safety Insights</strong></p>
+                    <p>Moving beyond binary "Safe/Unsafe" badges to provide clear elaborations on why an item was flagged (e.g., "Contains traces of Gluten").</p>
+                </li>
+                <li>
+                    <p><strong>Navigation & UX Refinement:</strong></p>
+                    <p>Streamlining the menu structure and refining wording to reduce cognitive load, particularly during the scanning process.</p>
+                </li>
+            </ul>
         </section>
 
     </div>

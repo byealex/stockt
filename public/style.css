@@ -81,7 +81,7 @@ table {
 }
 
 th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--bg-main); }
-th { background: rgba(68, 130, 233, 0.2); color: var(--accent); }
+th { background: rgba(68, 130, 233, 0.2); color: #C5D2E8; }
 
 blockquote {
     border-left: 4px solid var(--accent);
@@ -98,4 +98,69 @@ blockquote {
     padding: 25px;
     border-radius: 12px;
     margin-bottom: 20px;
+}
+
+/* --- 7. Data Collection Sub-Categories --- */
+.data-collection-content h4 {
+    margin-top: 25px;
+    margin-bottom: 10px;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--accent);
+    opacity: 0.9;
+    font-weight: 600
+}
+
+.data-collection-content h4::after { display: none; }
+
+.test-group {
+    margin: 10px 0 25px 0;
+    padding-left: 15px;
+    border-left: 1px solid var(--border);
+}
+
+.test-question {
+    color: #f0f0f0;
+    font-weight: 400;
+    font-size: 1rem;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.variable-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.variable-list li {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.variable-list li strong {
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-family: monospace;
+    margin-right: 8px;
+    display: inline-block;
+    width: 25px;
+    opacity: 0.8;
+}
+
+/* Specific styling for the Future Improvements list to override the global list-style: none */
+.future-list {
+    list-style: none;
+    padding: 0
+}
+
+.future-list li {
+    margin-bottom: 12px;
+    border-left: 1px solid var(--border);
+    padding-left: 15px;
+ }
+
+.future-list p, li p {
+    margin: 0;
 }
